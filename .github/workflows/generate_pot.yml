@@ -12,7 +12,7 @@ on:
     paths-ignore:
       - "*.md"
     branches:
-      - main
+      - win-wmote-hidapi
 
 jobs:
   generate-pot:
