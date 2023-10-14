@@ -7,7 +7,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       deploymode: release
-      experimentalversion: ${{ github.run_number }}
+      experimentalversion: win-wmote-hidapi
   deploy:
     name: Deploy experimental release
     runs-on: ubuntu-22.04
