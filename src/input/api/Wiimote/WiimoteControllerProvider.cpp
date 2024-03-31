@@ -275,9 +275,9 @@ void WiimoteControllerProvider::reader_thread()
 						be_type &= 0xFFFFFFFFFFFF;
 						switch (be_type.value())
 						{
-						case kExtensionNunchuck:
-                            cemuLog_logDebug(LogType::Force,"Extension Type Received: Nunchuck");
-							new_state.m_extension = NunchuckData{};
+						case kExtensionNunchuk:
+                            cemuLog_logDebug(LogType::Force,"Extension Type Received: Nunchuk");
+							new_state.m_extension = NunchukData{};
 							break;
 						case kExtensionClassic:
                             cemuLog_logDebug(LogType::Force,"Extension Type Received: Classic");
@@ -328,7 +328,7 @@ void WiimoteControllerProvider::reader_thread()
 								{
 									// TODO fix
 								},
-								[data](NunchuckData& nunchuck)
+								[data](NunchukData& nunchuk)
 								{
 									std::array<uint8, 14> zero{};
 									if (memcmp(zero.data(), data, zero.size()) == 0)
@@ -337,30 +337,30 @@ void WiimoteControllerProvider::reader_thread()
 										return;
 									}
 
-									nunchuck.calibration.zero.x = (uint16)data[0] << 2;
-									nunchuck.calibration.zero.y = (uint16)data[1] << 2;
-									nunchuck.calibration.zero.z = (uint16)data[2] << 2;
+									nunchuk.calibration.zero.x = (uint16)data[0] << 2;
+									nunchuk.calibration.zero.y = (uint16)data[1] << 2;
+									nunchuk.calibration.zero.z = (uint16)data[2] << 2;
 									// --XXYYZZ
-									nunchuck.calibration.zero.x |= (data[3] >> 4) & 0x3; // 5|4 -> 1|0
-									nunchuck.calibration.zero.y |= (data[3] >> 2) & 0x3; // 3|4 -> 1|0
-									nunchuck.calibration.zero.z |= data[3] & 0x3;
+									nunchuk.calibration.zero.x |= (data[3] >> 4) & 0x3; // 5|4 -> 1|0
+									nunchuk.calibration.zero.y |= (data[3] >> 2) & 0x3; // 3|4 -> 1|0
+									nunchuk.calibration.zero.z |= data[3] & 0x3;
 
-									nunchuck.calibration.gravity.x = (uint16)data[4] << 2;;
-									nunchuck.calibration.gravity.y = (uint16)data[5] << 2;;
-									nunchuck.calibration.gravity.z = (uint16)data[6] << 2;;
+									nunchuk.calibration.gravity.x = (uint16)data[4] << 2;;
+									nunchuk.calibration.gravity.y = (uint16)data[5] << 2;;
+									nunchuk.calibration.gravity.z = (uint16)data[6] << 2;;
 									// --XXYYZZ
-									nunchuck.calibration.gravity.x |= (data[7] >> 4) & 0x3; // 5|4 -> 1|0
-									nunchuck.calibration.gravity.y |= (data[7] >> 2) & 0x3; // 3|4 -> 1|0
-									nunchuck.calibration.gravity.z |= data[7] & 0x3;
+									nunchuk.calibration.gravity.x |= (data[7] >> 4) & 0x3; // 5|4 -> 1|0
+									nunchuk.calibration.gravity.y |= (data[7] >> 2) & 0x3; // 3|4 -> 1|0
+									nunchuk.calibration.gravity.z |= data[7] & 0x3;
 
-									nunchuck.calibration.max.x = data[8];
-									nunchuck.calibration.max.y = data[11];
+									nunchuk.calibration.max.x = data[8];
+									nunchuk.calibration.max.y = data[11];
 
-									nunchuck.calibration.min.x = data[9];
-									nunchuck.calibration.min.y = data[12];
+									nunchuk.calibration.min.x = data[9];
+									nunchuk.calibration.min.y = data[12];
 
-									nunchuck.calibration.center.x = data[10];
-									nunchuck.calibration.center.y = data[13];
+									nunchuk.calibration.center.x = data[10];
+									nunchuk.calibration.center.y = data[13];
 								}
 							}, new_state.m_extension);
 					}
@@ -480,11 +480,11 @@ void WiimoteControllerProvider::reader_thread()
 								mp.orientation = orientation;
                                 cemuLog_logDebug(LogType::Force,"MotionPlus: {:.2f}, {:.2f} {:.2f}", mp.orientation.x, mp.orientation.y, mp.orientation.z);
 							},
-							[data](NunchuckData& nunchuck) mutable
+							[data](NunchukData& nunchuk) mutable
 							{
-								nunchuck.raw_axis.x = *data;
+								nunchuk.raw_axis.x = *data;
 								++data;
-								nunchuck.raw_axis.y = *data;
+								nunchuk.raw_axis.y = *data;
 								++data;
 
 								glm::vec<3, uint16> raw_acc;
@@ -494,38 +494,38 @@ void WiimoteControllerProvider::reader_thread()
 								++data;
 								raw_acc.z = (uint16)*data << 2;
 								++data;
-								nunchuck.z = (*data & 1) == 0;
-								nunchuck.c = (*data & 2) == 0;
+								nunchuk.z = (*data & 1) == 0;
+								nunchuk.c = (*data & 2) == 0;
 
 								raw_acc.x |= (*data >> 2) & 0x3; // 3|2 -> 1|0
 								raw_acc.y |= (*data >> 4) & 0x3; // 5|4 -> 1|0
 								raw_acc.z |= (*data >> 6) & 0x3; // 7|6 -> 1|0
 
-								auto& calib = nunchuck.calibration;
+								auto& calib = nunchuk.calibration;
 
-								if (nunchuck.raw_axis.x < nunchuck.calibration.center.x) // [-1, 0]
-									nunchuck.axis.x = ((float)nunchuck.raw_axis.x - calib.min.x) / ((float)nunchuck.
+								if (nunchuk.raw_axis.x < nunchuk.calibration.center.x) // [-1, 0]
+									nunchuk.axis.x = ((float)nunchuk.raw_axis.x - calib.min.x) / ((float)nunchuk.
 										calibration.center.x - calib.min.x + 0.012f) - 1.0f;
 								else // [0, 1]
-									nunchuck.axis.x = (float)(nunchuck.raw_axis.x - nunchuck.calibration.center.x) / (
-										nunchuck.calibration.max.x - nunchuck.calibration.center.x + 0.012f);
+									nunchuk.axis.x = (float)(nunchuk.raw_axis.x - nunchuk.calibration.center.x) / (
+										nunchuk.calibration.max.x - nunchuk.calibration.center.x + 0.012f);
 
-								if (nunchuck.raw_axis.y <= nunchuck.calibration.center.y) // [-1, 0]
-									nunchuck.axis.y = ((float)nunchuck.raw_axis.y - calib.min.y) / ((float)nunchuck.
+								if (nunchuk.raw_axis.y <= nunchuk.calibration.center.y) // [-1, 0]
+									nunchuk.axis.y = ((float)nunchuk.raw_axis.y - calib.min.y) / ((float)nunchuk.
 										calibration.center.y - calib.min.y + 0.012f) - 1.0f;
 								else // [0, 1]
-									nunchuck.axis.y = (float)(nunchuck.raw_axis.y - nunchuck.calibration.center.y) / (
-										nunchuck.calibration.max.y - nunchuck.calibration.center.y);
+									nunchuk.axis.y = (float)(nunchuk.raw_axis.y - nunchuk.calibration.center.y) / (
+										nunchuk.calibration.max.y - nunchuk.calibration.center.y);
 
 								glm::vec3 acceleration = raw_acc;
-								nunchuck.prev_acceleration = nunchuck.acceleration;
-								nunchuck.acceleration = acceleration - glm::vec3(calib.zero);
+								nunchuk.prev_acceleration = nunchuk.acceleration;
+								nunchuk.acceleration = acceleration - glm::vec3(calib.zero);
 
-								float acc[3]{ -nunchuck.acceleration.x, -nunchuck.acceleration.z, nunchuck.acceleration.y };
-								const auto grav = nunchuck.calibration.gravity - nunchuck.calibration.zero;
+								float acc[3]{ -nunchuk.acceleration.x, -nunchuk.acceleration.z, nunchuk.acceleration.y };
+								const auto grav = nunchuk.calibration.gravity - nunchuk.calibration.zero;
 
-								auto tacc = nunchuck.acceleration;
-								auto pacc = nunchuck.prev_acceleration;
+								auto tacc = nunchuk.acceleration;
+								auto pacc = nunchuk.prev_acceleration;
 								if (grav != glm::vec<3, uint16>{})
 								{
 									acc[0] /= (float)grav.x;
@@ -545,18 +545,18 @@ void WiimoteControllerProvider::reader_thread()
 								float zero4[4]{};
 
 
-								nunchuck.motion_sample = MotionSample(
+								nunchuk.motion_sample = MotionSample(
 									acc,
 									glm::length(tacc - pacc),
 									zero3,
 									zero3,
 									zero4
 								);
-                                cemuLog_logDebug(LogType::Force,"Nunchuck: Z={}, C={} | {}, {} | {:.2f}, {:.2f}, {:.2f}",
-                                                 nunchuck.z, nunchuck.c,
-                                                 nunchuck.axis.x, nunchuck.axis.y,
-                                                 RadToDeg(nunchuck.acceleration.x), RadToDeg(nunchuck.acceleration.y),
-                                                 RadToDeg(nunchuck.acceleration.z));
+                                cemuLog_logDebug(LogType::Force,"Nunchuk: Z={}, C={} | {}, {} | {:.2f}, {:.2f}, {:.2f}",
+                                                 nunchuk.z, nunchuk.c,
+                                                 nunchuk.axis.x, nunchuk.axis.y,
+                                                 RadToDeg(nunchuk.acceleration.x), RadToDeg(nunchuk.acceleration.y),
+                                                 RadToDeg(nunchuk.acceleration.z));
 							},
 							[data](ClassicData& classic) mutable
 							{

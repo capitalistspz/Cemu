@@ -130,11 +130,11 @@ bool EmulatedController::has_second_motion() const
 	{
 		if(controller->use_motion())
 		{
-			// if wiimote has nunchuck connected, we use its acceleration
+			// if wiimote has nunchuk connected, we use its acceleration
             #if SUPPORTS_WIIMOTE
             if(controller->api() == InputAPI::Wiimote)
 			{
-				if(((NativeWiimoteController*)controller.get())->get_extension() == NativeWiimoteController::Nunchuck)
+				if(((NativeWiimoteController*)controller.get())->get_extension() == NativeWiimoteController::Nunchuk)
 				{
 					return true;
 				}
@@ -155,13 +155,13 @@ MotionSample EmulatedController::get_second_motion_data() const
 	{
 		if (controller->use_motion())
 		{
-			// if wiimote has nunchuck connected, we use its acceleration
+			// if wiimote has nunchuk connected, we use its acceleration
             #ifdef SUPPORTS_WIIMOTE
 			if (controller->api() == InputAPI::Wiimote)
 			{
-				if (((NativeWiimoteController*)controller.get())->get_extension() == NativeWiimoteController::Nunchuck)
+				if (((NativeWiimoteController*)controller.get())->get_extension() == NativeWiimoteController::Nunchuk)
 				{
-					return ((NativeWiimoteController*)controller.get())->get_nunchuck_motion_sample();
+					return ((NativeWiimoteController*)controller.get())->get_nunchuk_motion_sample();
 				}
 			}
 			#endif

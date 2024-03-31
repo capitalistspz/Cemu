@@ -81,42 +81,42 @@ WiimoteControllerSettings::WiimoteControllerSettings(wxWindow* parent, const wxP
 		sizer->Add(box_sizer, 0, wxALL | wxEXPAND, 5);
 	}
 
-	// Nunchuck
+	// Nunchuk
 	{
-		m_nunchuck_settings = new wxStaticBox(this, wxID_ANY, _("Nunchuck"));
-		auto* box_sizer = new wxStaticBoxSizer(m_nunchuck_settings, wxVERTICAL);
+		m_nunchuk_settings = new wxStaticBox(this, wxID_ANY, _("Nunchuk"));
+		auto* box_sizer = new wxStaticBoxSizer(m_nunchuk_settings, wxVERTICAL);
 
 		{
 			auto* content_sizer = new wxFlexGridSizer(0, 3, 0, 0);
 
 			// Deadzone
 			const auto deadzone = (int)(m_settings.axis.deadzone * 100);
-			content_sizer->Add(new wxStaticText(m_nunchuck_settings, wxID_ANY, _("Deadzone")), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
-			m_nunchuck_deadzone = new wxSlider(m_nunchuck_settings, wxID_ANY, deadzone, 0, 100);
-			content_sizer->Add(m_nunchuck_deadzone, 1, wxALL | wxEXPAND, 5);
+			content_sizer->Add(new wxStaticText(m_nunchuk_settings, wxID_ANY, _("Deadzone")), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
+			m_nunchuk_deadzone = new wxSlider(m_nunchuk_settings, wxID_ANY, deadzone, 0, 100);
+			content_sizer->Add(m_nunchuk_deadzone, 1, wxALL | wxEXPAND, 5);
 
-			const auto deadzone_text = new wxStaticText(m_nunchuck_settings, wxID_ANY, wxString::Format("%d%%", deadzone));
+			const auto deadzone_text = new wxStaticText(m_nunchuk_settings, wxID_ANY, wxString::Format("%d%%", deadzone));
 			content_sizer->Add(deadzone_text, 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
 
-			m_nunchuck_deadzone->Bind(wxEVT_SLIDER, &WiimoteControllerSettings::on_slider_change, this, wxID_ANY, wxID_ANY,
+			m_nunchuk_deadzone->Bind(wxEVT_SLIDER, &WiimoteControllerSettings::on_slider_change, this, wxID_ANY, wxID_ANY,
 				new wxControlObject(deadzone_text));
 
 
 			// Range
 			const auto range = (int)(m_settings.axis.range * 100);
-			content_sizer->Add(new wxStaticText(m_nunchuck_settings, wxID_ANY, _("Range")), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
-			m_nunchuck_range = new wxSlider(m_nunchuck_settings, wxID_ANY, range, 50, 200);
-			content_sizer->Add(m_nunchuck_range, 1, wxALL | wxEXPAND, 5);
+			content_sizer->Add(new wxStaticText(m_nunchuk_settings, wxID_ANY, _("Range")), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
+			m_nunchuk_range = new wxSlider(m_nunchuk_settings, wxID_ANY, range, 50, 200);
+			content_sizer->Add(m_nunchuk_range, 1, wxALL | wxEXPAND, 5);
 
-			const auto range_text = new wxStaticText(m_nunchuck_settings, wxID_ANY, wxString::Format("%d%%", range));
+			const auto range_text = new wxStaticText(m_nunchuk_settings, wxID_ANY, wxString::Format("%d%%", range));
 			content_sizer->Add(range_text, 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
 
-			m_nunchuck_range->Bind(wxEVT_SLIDER, &WiimoteControllerSettings::on_slider_change, this, wxID_ANY, wxID_ANY,
+			m_nunchuk_range->Bind(wxEVT_SLIDER, &WiimoteControllerSettings::on_slider_change, this, wxID_ANY, wxID_ANY,
 				new wxControlObject(range_text));
 
 			content_sizer->AddSpacer(1);
-			m_nunchuck_draw = new wxInputDraw(m_nunchuck_settings, wxID_ANY, wxDefaultPosition, { 60, 60 });
-			content_sizer->Add(m_nunchuck_draw, 0, wxTOP | wxBOTTOM | wxALIGN_CENTER, 5);
+			m_nunchuk_draw = new wxInputDraw(m_nunchuk_settings, wxID_ANY, wxDefaultPosition, { 60, 60 });
+			content_sizer->Add(m_nunchuk_draw, 0, wxTOP | wxBOTTOM | wxALIGN_CENTER, 5);
 
 			box_sizer->Add(content_sizer, 1, wxEXPAND, 0);
 		}
@@ -268,10 +268,10 @@ void WiimoteControllerSettings::on_timer(wxTimerEvent& event)
 	m_controller->apply_axis_setting(state.rotation, default_state.rotation, m_settings.rotation);
 	m_controller->apply_axis_setting(state.trigger, default_state.trigger, m_settings.trigger);
 
-	if (m_nunchuck_settings->IsEnabled())
+	if (m_nunchuk_settings->IsEnabled())
 	{
-		m_nunchuck_draw->SetDeadzone(m_settings.axis.deadzone);
-		m_nunchuck_draw->SetAxisValue(state.axis);
+		m_nunchuk_draw->SetDeadzone(m_settings.axis.deadzone);
+		m_nunchuk_draw->SetAxisValue(state.axis);
 	}
 
 	if (m_classic_settings->IsEnabled())
@@ -286,18 +286,18 @@ void WiimoteControllerSettings::on_timer(wxTimerEvent& event)
 	wxString label;
 	switch (m_controller->get_extension())
 	{
-	case NativeWiimoteController::Nunchuck:
-		label = _("Nunchuck");
-		m_nunchuck_settings->Enable();
+	case NativeWiimoteController::Nunchuk:
+		label = _("Nunchuk");
+		m_nunchuk_settings->Enable();
 		m_classic_settings->Disable();
 		break; 
 	case NativeWiimoteController::Classic: 
 		label = _("Classic");
-		m_nunchuck_settings->Disable();
+		m_nunchuk_settings->Disable();
 		m_classic_settings->Enable();
 		break;
 	default: 
-		m_nunchuck_settings->Disable();
+		m_nunchuk_settings->Disable();
 		m_classic_settings->Disable();
 	}
 
@@ -335,9 +335,9 @@ void WiimoteControllerSettings::on_slider_change(wxCommandEvent& event)
 	const auto new_value = (float)event.GetInt() / 100.0f;
 
 	auto* obj = event.GetEventObject();
-	if (obj == m_nunchuck_deadzone || obj == m_classic_axis_deadzone)
+	if (obj == m_nunchuk_deadzone || obj == m_classic_axis_deadzone)
 		m_settings.axis.deadzone = new_value;
-	else if (obj == m_nunchuck_range || obj == m_classic_axis_range)
+	else if (obj == m_nunchuk_range || obj == m_classic_axis_range)
 			m_settings.axis.range = new_value;
 	else if (obj == m_classic_rotation_deadzone)
 			m_settings.rotation.deadzone = new_value;

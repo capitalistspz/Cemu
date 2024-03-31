@@ -37,8 +37,8 @@ enum WPADCoreButtons
 	kWPADButton_Home = 0x8000,
 };
 
-// Nunchuck aka Freestyle
-enum WPADNunchuckButtons
+// Nunchuk aka Freestyle
+enum WPADNunchukButtons
 {
 	kWPADButton_Z = 0x2000,
 	kWPADButton_C = 0x4000,

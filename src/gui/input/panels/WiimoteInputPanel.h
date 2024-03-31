@@ -29,12 +29,12 @@ private:
 
 	wxGridBagSizer* m_item_sizer;
 
-	wxCheckBox* m_nunchuck, * m_classic;
+	wxCheckBox* m_nunchuk, * m_classic;
 	wxCheckBox* m_motion_plus;
 
 	wxSlider* m_volume;
 
-	std::vector<wxWindow*> m_nunchuck_items;
+	std::vector<wxWindow*> m_nunchuk_items;
 
 	void add_button_row(sint32 row, sint32 column, const WiimoteController::ButtonId &button_id);
 };

@@ -15,8 +15,8 @@ public:
 		kButtonId_1,
 		kButtonId_2,
 
-		kButtonId_Nunchuck_Z,
-		kButtonId_Nunchuck_C,
+		kButtonId_Nunchuk_Z,
+		kButtonId_Nunchuk_C,
 
 		kButtonId_Plus,
 		kButtonId_Minus,
@@ -28,10 +28,10 @@ public:
 		kButtonId_Right,
 
 
-		kButtonId_Nunchuck_Up,
-		kButtonId_Nunchuck_Down,
-		kButtonId_Nunchuck_Left,
-		kButtonId_Nunchuck_Right,
+		kButtonId_Nunchuk_Up,
+		kButtonId_Nunchuk_Down,
+		kButtonId_Nunchuk_Left,
+		kButtonId_Nunchuk_Right,
 
 		kButtonId_Home,
 
@@ -48,7 +48,7 @@ public:
 
 	uint32 get_emulated_button_flag(uint32 id) const override;
 	size_t get_highest_mapping_id() const override { return kButtonId_Max; }
-	bool is_axis_mapping(uint64 mapping) const override { return mapping >= kButtonId_Nunchuck_Up && mapping <= kButtonId_Nunchuck_Right; }
+	bool is_axis_mapping(uint64 mapping) const override { return mapping >= kButtonId_Nunchuk_Up && mapping <= kButtonId_Nunchuk_Right; }
 
 	bool set_default_mapping(const std::shared_ptr<ControllerBase>& controller) override;
 

@@ -12,7 +12,7 @@ public:
 	enum Extension
 	{
 		None,
-		Nunchuck,
+		Nunchuk,
 		Classic,
 		MotionPlus,
 	};
@@ -51,7 +51,7 @@ public:
 	void stop_rumble() override;
 
 	MotionSample get_motion_sample() override;
-	MotionSample get_nunchuck_motion_sample() const;
+	MotionSample get_nunchuk_motion_sample() const;
 
 	std::string get_button_name(uint64 button) const override;
 

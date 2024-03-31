@@ -67,7 +67,7 @@ public:
 		}ir_camera{};
 
 		std::optional<MotionPlusData> m_motion_plus;
-		std::variant<std::monostate, NunchuckData, ClassicData> m_extension{};
+		std::variant<std::monostate, NunchukData, ClassicData> m_extension{};
 	};
 	WiimoteState get_state(size_t index);
 	

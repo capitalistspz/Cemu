@@ -67,8 +67,8 @@ NativeWiimoteController::Extension NativeWiimoteController::get_extension() cons
 {
 	Extension result = None;
 	const auto ext = m_provider->get_state(m_index).m_extension;
-	if (std::holds_alternative<NunchuckData>(ext))
-		result = Nunchuck;
+	if (std::holds_alternative<NunchukData>(ext))
+		result = Nunchuk;
 	else if (std::holds_alternative<ClassicData>(ext))
 		result = Classic;
 
@@ -126,12 +126,12 @@ MotionSample NativeWiimoteController::get_motion_sample()
 	return state.motion_sample;
 }
 
-MotionSample NativeWiimoteController::get_nunchuck_motion_sample() const
+MotionSample NativeWiimoteController::get_nunchuk_motion_sample() const
 {
 	const auto state = m_provider->get_state(m_index);
-	if (std::holds_alternative<NunchuckData>(state.m_extension))
+	if (std::holds_alternative<NunchukData>(state.m_extension))
 	{
-		return std::get<NunchuckData>(state.m_extension).motion_sample;
+		return std::get<NunchukData>(state.m_extension).motion_sample;
 	}
 
 	return {};
@@ -157,7 +157,7 @@ std::string NativeWiimoteController::get_button_name(uint64 button) const
 	case kWiimoteButton_Left: return "LEFT";
 	case kWiimoteButton_Right: return "RIGHT";
 
-	// nunchuck
+	// nunchuk
 	case kWiimoteButton_C: return "C";
 	case kWiimoteButton_Z: return "Z";
 
@@ -209,16 +209,16 @@ ControllerState NativeWiimoteController::raw_state()
 	for (int i = 0; i < std::numeric_limits<uint16>::digits; i++)
 		result.buttons.SetButtonState(i, (state.buttons & (1 << i)) != 0);
 
-	if (std::holds_alternative<NunchuckData>(state.m_extension))
+	if (std::holds_alternative<NunchukData>(state.m_extension))
 	{
-		const auto nunchuck = std::get<NunchuckData>(state.m_extension);
-		if (nunchuck.c)
+		const auto nunchuk = std::get<NunchukData>(state.m_extension);
+		if (nunchuk.c)
 			result.buttons.SetButtonState(kWiimoteButton_C, true);
 
-		if (nunchuck.z)
+		if (nunchuk.z)
 			result.buttons.SetButtonState(kWiimoteButton_Z, true);
 
-		result.axis = nunchuck.axis;
+		result.axis = nunchuk.axis;
 	}
 	else if (std::holds_alternative<ClassicData>(state.m_extension))
 	{

@@ -26,9 +26,9 @@ constexpr WiimoteController::ButtonId g_kSecondColumnItems[] =
 
 constexpr WiimoteController::ButtonId g_kThirdColumnItems[] =
 {
-	WiimoteController::kButtonId_Nunchuck_C, WiimoteController::kButtonId_Nunchuck_Z,
+	WiimoteController::kButtonId_Nunchuk_C, WiimoteController::kButtonId_Nunchuk_Z,
 	WiimoteController::kButtonId_None,
-	WiimoteController::kButtonId_Nunchuck_Up,WiimoteController::kButtonId_Nunchuck_Down,WiimoteController::kButtonId_Nunchuck_Left,WiimoteController::kButtonId_Nunchuck_Right
+	WiimoteController::kButtonId_Nunchuk_Up,WiimoteController::kButtonId_Nunchuk_Down,WiimoteController::kButtonId_Nunchuk_Left,WiimoteController::kButtonId_Nunchuk_Right
 };
 
 WiimoteInputPanel::WiimoteInputPanel(wxWindow* parent)
@@ -55,9 +55,9 @@ WiimoteInputPanel::WiimoteInputPanel(wxWindow* parent)
 	m_motion_plus->Bind(wxEVT_CHECKBOX, &WiimoteInputPanel::on_extension_change, this);
 	extensions_sizer->Add(m_motion_plus);
 
-	m_nunchuck = new wxCheckBox(this, wxID_ANY, _("Nunchuck"));
-	m_nunchuck->Bind(wxEVT_CHECKBOX, &WiimoteInputPanel::on_extension_change, this);
-	extensions_sizer->Add(m_nunchuck);
+	m_nunchuk = new wxCheckBox(this, wxID_ANY, _("Nunchuk"));
+	m_nunchuk->Bind(wxEVT_CHECKBOX, &WiimoteInputPanel::on_extension_change, this);
+	extensions_sizer->Add(m_nunchuk);
 
 	m_classic = new wxCheckBox(this, wxID_ANY, _("Classic"));
 	m_classic->Bind(wxEVT_CHECKBOX, &WiimoteInputPanel::on_extension_change, this);
@@ -117,7 +117,7 @@ WiimoteInputPanel::WiimoteInputPanel(wxWindow* parent)
 	row = 0;
 	column += 4;
 
-	text = new wxStaticText(this, wxID_ANY, _("Nunchuck"));
+	text = new wxStaticText(this, wxID_ANY, _("Nunchuk"));
 	text->SetFont(bold_font);
 	m_item_sizer->Add(text, wxGBPosition(row, column), wxGBSpan(1, 3), wxALL | wxEXPAND, 5);
 
@@ -139,20 +139,20 @@ WiimoteInputPanel::WiimoteInputPanel(wxWindow* parent)
 		text_ctrl->SetEditable(false);
 		text_ctrl->SetBackgroundColour(kKeyColourNormalMode);
 		bind_hotkey_events(text_ctrl);
-		text_ctrl->Enable(m_nunchuck->GetValue());
+		text_ctrl->Enable(m_nunchuk->GetValue());
 		m_item_sizer->Add(text_ctrl, wxGBPosition(row, column + 1), wxDefaultSpan, wxALL | wxEXPAND, 5);
 
-		m_nunchuck_items.push_back(text_ctrl);
+		m_nunchuk_items.push_back(text_ctrl);
 	}
 
 
 	// input drawer
 	m_draw = new wxInputDraw(this, wxID_ANY, wxDefaultPosition, { 60, 60 });
-	m_draw->Enable(m_nunchuck->GetValue());
+	m_draw->Enable(m_nunchuk->GetValue());
 	m_item_sizer->Add(5, 0, wxGBPosition(3, column + 3), wxDefaultSpan, wxTOP | wxBOTTOM | wxEXPAND | wxALIGN_CENTER, 5);
 	m_item_sizer->Add(m_draw, wxGBPosition(3, column + 4), wxGBSpan(4, 1), wxTOP | wxBOTTOM | wxEXPAND | wxALIGN_CENTER, 5);
 
-	m_nunchuck_items.push_back(m_draw);
+	m_nunchuk_items.push_back(m_draw);
 
 	//////////////////////////////////////////////////////////////////
 
@@ -187,9 +187,9 @@ void WiimoteInputPanel::set_active_device_type(WPADDeviceType type)
 	{
 	case kWAPDevFreestyle: 
 	case kWAPDevMPLSFreeStyle:
-		m_nunchuck->SetValue(true);
+		m_nunchuk->SetValue(true);
 		m_classic->SetValue(false);
-		for (const auto& item : m_nunchuck_items)
+		for (const auto& item : m_nunchuk_items)
 		{
 			item->Enable(true);
 		}
@@ -197,18 +197,18 @@ void WiimoteInputPanel::set_active_device_type(WPADDeviceType type)
 
 	case kWAPDevClassic: 
 	case kWAPDevMPLSClassic:
-		m_nunchuck->SetValue(false);
+		m_nunchuk->SetValue(false);
 		m_classic->SetValue(true);
-		for (const auto& item : m_nunchuck_items)
+		for (const auto& item : m_nunchuk_items)
 		{
 			item->Enable(false);
 		}
 		break;
 
 	default:
-		m_nunchuck->SetValue(false);
+		m_nunchuk->SetValue(false);
 		m_classic->SetValue(false);
-		for (const auto& item : m_nunchuck_items)
+		for (const auto& item : m_nunchuk_items)
 		{
 			item->Enable(false);
 		}
@@ -221,13 +221,13 @@ void WiimoteInputPanel::on_volume_change(wxCommandEvent& event)
 
 void WiimoteInputPanel::on_extension_change(wxCommandEvent& event)
 {
-	if(m_motion_plus->GetValue() && m_nunchuck->GetValue())
+	if(m_motion_plus->GetValue() && m_nunchuk->GetValue())
 		set_active_device_type(kWAPDevMPLSFreeStyle);
 	else if(m_motion_plus->GetValue() && m_classic->GetValue())
 		set_active_device_type(kWAPDevMPLSClassic);
 	else if (m_motion_plus->GetValue())
 		set_active_device_type(kWAPDevMPLS);
-	else if (m_nunchuck->GetValue())
+	else if (m_nunchuk->GetValue())
 		set_active_device_type(kWAPDevFreestyle);
 	else if (m_classic->GetValue())
 		set_active_device_type(kWAPDevClassic);

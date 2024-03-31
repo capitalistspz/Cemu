@@ -37,9 +37,9 @@ private:
 	wxCheckBox* m_rumble = nullptr;
 	wxCheckBox* m_use_motion = nullptr;
 
-	wxStaticBox* m_nunchuck_settings;
-	wxSlider* m_nunchuck_deadzone, * m_nunchuck_range;
-	wxInputDraw* m_nunchuck_draw;
+	wxStaticBox* m_nunchuk_settings;
+	wxSlider* m_nunchuk_deadzone, * m_nunchuk_range;
+	wxInputDraw* m_nunchuk_draw;
 
 	wxStaticBox* m_classic_settings;
 	wxSlider* m_classic_axis_deadzone, * m_classic_axis_range;

@@ -60,7 +60,7 @@ public:
 	bool has_motion() const;
 	MotionSample get_motion_data() const;
 
-	// some controllers (nunchuck) provide extra motion data
+	// some controllers (nunchuk) provide extra motion data
 	bool has_second_motion() const;
 	MotionSample get_second_motion_data() const;
 

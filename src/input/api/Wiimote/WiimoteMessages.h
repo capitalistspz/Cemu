@@ -45,7 +45,7 @@ enum RegisterAddress : uint32
 
 enum ExtensionType : uint64
 {
-	kExtensionNunchuck = 0x0000A4200000,
+	kExtensionNunchuk = 0x0000A4200000,
 	kExtensionClassic = 0x0000A4200101,
 	kExtensionClassicPro = 0x0100A4200101,
 	kExtensionDrawsome = 0xFF00A4200013,
@@ -198,7 +198,7 @@ struct IRCamera
 	std::pair<sint32, sint32> indices{ 0,1 };
 };
 
-struct NunchuchCalibration : Calibration
+struct NunchukCalibration : Calibration
 {
 	glm::vec<2, uint8> min{};
 	glm::vec<2, uint8> center{ 0x7f, 0x7f };
@@ -216,10 +216,10 @@ struct MotionPlusData
 	bool extension_connected = false;
 };
 
-struct NunchuckData
+struct NunchukData
 {
 	glm::vec3 acceleration{}, prev_acceleration{};
-	NunchuchCalibration calibration{};
+	NunchukCalibration calibration{};
 
 	bool c = false;
 	bool z = false;

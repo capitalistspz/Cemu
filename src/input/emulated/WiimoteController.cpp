@@ -49,13 +49,13 @@ bool WiimoteController::set_default_mapping(const std::shared_ptr<ControllerBase
 			{kButtonId_Left, kWiimoteButton_Left},
 			{kButtonId_Right, kWiimoteButton_Right},
 
-			{kButtonId_Nunchuck_Z, kWiimoteButton_Z},
-			{kButtonId_Nunchuck_C, kWiimoteButton_C},
+			{kButtonId_Nunchuk_Z, kWiimoteButton_Z},
+			{kButtonId_Nunchuk_C, kWiimoteButton_C},
 
-			{kButtonId_Nunchuck_Up, kAxisYP},
-			{kButtonId_Nunchuck_Down, kAxisYN},
-			{kButtonId_Nunchuck_Left, kAxisXN},
-			{kButtonId_Nunchuck_Right, kAxisXP},
+			{kButtonId_Nunchuk_Up, kAxisYP},
+			{kButtonId_Nunchuk_Down, kAxisYN},
+			{kButtonId_Nunchuk_Left, kAxisXN},
+			{kButtonId_Nunchuk_Right, kAxisXP},
 		};
 	}
 	}
@@ -75,11 +75,11 @@ bool WiimoteController::set_default_mapping(const std::shared_ptr<ControllerBase
 
 glm::vec2 WiimoteController::get_axis() const
 {
-	const auto left = get_axis_value(kButtonId_Nunchuck_Left);
-	const auto right = get_axis_value(kButtonId_Nunchuck_Right);
+	const auto left = get_axis_value(kButtonId_Nunchuk_Left);
+	const auto right = get_axis_value(kButtonId_Nunchuk_Right);
 
-	const auto up = get_axis_value(kButtonId_Nunchuck_Up);
-	const auto down = get_axis_value(kButtonId_Nunchuck_Down);
+	const auto up = get_axis_value(kButtonId_Nunchuk_Up);
+	const auto down = get_axis_value(kButtonId_Nunchuk_Down);
 
 	glm::vec2 result;
 	result.x = (left > right) ? -left : right;
@@ -141,9 +141,9 @@ uint32 WiimoteController::s_get_emulated_button_flag(uint32 id)
 		case kButtonId_Right:
 			return kWPADButton_Right;
 
-		case kButtonId_Nunchuck_Z:
+		case kButtonId_Nunchuk_Z:
 			return kWPADButton_Z;
-		case kButtonId_Nunchuck_C:
+		case kButtonId_Nunchuk_C:
 			return kWPADButton_C;
 	}
 
@@ -168,13 +168,13 @@ std::string_view WiimoteController::get_button_name(ButtonId id)
 	case kButtonId_Left: return wxTRANSLATE("left");
 	case kButtonId_Right: return wxTRANSLATE("right");
 
-	case kButtonId_Nunchuck_Z: return "Z";
-	case kButtonId_Nunchuck_C: return "C";
+	case kButtonId_Nunchuk_Z: return "Z";
+	case kButtonId_Nunchuk_C: return "C";
 
-	case kButtonId_Nunchuck_Up: return wxTRANSLATE("up");
-	case kButtonId_Nunchuck_Down: return wxTRANSLATE("down");
-	case kButtonId_Nunchuck_Left: return wxTRANSLATE("left");
-	case kButtonId_Nunchuck_Right: return wxTRANSLATE("right");
+	case kButtonId_Nunchuk_Up: return wxTRANSLATE("up");
+	case kButtonId_Nunchuk_Down: return wxTRANSLATE("down");
+	case kButtonId_Nunchuk_Left: return wxTRANSLATE("left");
+	case kButtonId_Nunchuk_Right: return wxTRANSLATE("right");
 
 	default:
 		return "";
