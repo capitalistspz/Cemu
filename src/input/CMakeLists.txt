@@ -66,12 +66,13 @@ if (ENABLE_WIIMOTE)
 	target_sources(CemuInput PRIVATE
 			api/Wiimote/WiimoteControllerProvider.h
 			api/Wiimote/WiimoteControllerProvider.cpp
-			api/Wiimote/WiimoteMessages.h
+			api/Wiimote/WiimoteDataTypes.h
 			api/Wiimote/NativeWiimoteController.h
 			api/Wiimote/NativeWiimoteController.cpp
 			api/Wiimote/WiimoteDevice.h
 			api/Wiimote/hidapi/HidapiWiimote.cpp
 			api/Wiimote/hidapi/HidapiWiimote.h
+			api/Wiimote/WiimoteComponents.h
 	)
 endif ()
 

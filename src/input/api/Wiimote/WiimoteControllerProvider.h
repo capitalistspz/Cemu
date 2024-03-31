@@ -1,8 +1,9 @@
 #pragma once
 
 #include "input/motion/MotionHandler.h"
-#include "input/api/Wiimote/WiimoteDevice.h"
-#include "input/api/Wiimote/WiimoteMessages.h"
+#include "WiimoteDevice.h"
+#include "WiimoteDataTypes.h"
+#include "WiimoteComponents.h"
 
 #include "input/api/ControllerProvider.h"
 
@@ -39,36 +40,7 @@ public:
 	uint32 get_packet_delay(size_t index);
 	void set_packet_delay(size_t index, uint32 delay);
 
-	struct WiimoteState
-	{
-		uint16 buttons = 0;
-		uint8 flags = 0;
-		uint8 battery_level = 0;
 
-		glm::vec3 m_acceleration{}, m_prev_acceleration{};
-		float m_roll = 0;
-
-		std::chrono::high_resolution_clock::time_point m_last_motion_timestamp{};
-		MotionSample motion_sample{};
-		WiiUMotionHandler motion_handler{};
-
-		bool m_calibrated = false;
-		Calibration m_calib_acceleration{};
-
-		struct IRCamera
-		{
-			IRMode mode = kIRDisabled;
-			std::array<IRDot, 4> dots{}, prev_dots{};
-
-			glm::vec2 position{}, m_prev_position{};
-			glm::vec2 middle {};
-			float distance = 0;
-			std::pair<sint32, sint32> indices{ 0,1 };
-		}ir_camera{};
-
-		std::optional<MotionPlusData> m_motion_plus;
-		std::variant<std::monostate, NunchukData, ClassicData> m_extension{};
-	};
 	WiimoteState get_state(size_t index);
 	
 

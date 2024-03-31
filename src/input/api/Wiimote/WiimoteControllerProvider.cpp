@@ -1,11 +1,28 @@
 #include "input/api/Wiimote/WiimoteControllerProvider.h"
 #include "input/api/Wiimote/NativeWiimoteController.h"
-#include "input/api/Wiimote/WiimoteMessages.h"
+#include "input/api/Wiimote/WiimoteDataTypes.h"
 
 #include "input/api/Wiimote/hidapi/HidapiWiimote.h"
 
 #include <numbers>
 #include <queue>
+
+
+enum ExtensionType : uint64
+{
+	kExtensionNunchuk = 0x0000A4200000,
+	kExtensionClassic = 0x0000A4200101,
+	kExtensionClassicPro = 0x0100A4200101,
+	kExtensionDrawsome = 0xFF00A4200013,
+	kExtensionGuitar = 0x0000A4200103,
+	kExtensionDrums = 0x0100A4200103,
+	kExtensionBalanceBoard = 0x2A2C,
+
+	kExtensionMotionPlus = 0xa6200005,
+
+	kExtensionPartialyInserted = 0xffffffffffff,
+};
+
 
 WiimoteControllerProvider::WiimoteControllerProvider()
 	: m_running(true)
@@ -129,7 +146,7 @@ void WiimoteControllerProvider::set_packet_delay(size_t index, uint32 delay)
 	}
 }
 
-WiimoteControllerProvider::WiimoteState WiimoteControllerProvider::get_state(size_t index)
+WiimoteState WiimoteControllerProvider::get_state(size_t index)
 {
 	std::shared_lock lock(m_device_mutex);
 	if (index < m_wiimotes.size())
