@@ -78,8 +78,8 @@ private:
 	IRMode set_ir_camera(size_t index, bool state);
 
 	void send_packet(size_t index, std::vector<uint8> data);
-	void send_read_packet(size_t index, MemoryType type, RegisterAddress address, uint16 size);
-	void send_write_packet(size_t index, MemoryType type, RegisterAddress address, const std::vector<uint8>& data);
+	void send_read_packet(size_t index, uint32 address, uint16 size);
+	void send_write_packet(size_t index, uint32 address, const std::vector<uint8>& data);
 
 	void parse_acceleration(WiimoteState& wiimote_state, const uint8*& data);
 

@@ -7,7 +7,6 @@
 #include <numbers>
 #include <queue>
 
-
 enum ExtensionType : uint64
 {
 	kExtensionNunchuk = 0x0000A4200000,
@@ -23,6 +22,27 @@ enum ExtensionType : uint64
 	kExtensionPartialyInserted = 0xffffffffffff,
 };
 
+enum Address : uint32
+{
+	kRegisterCalibration = 0x16,
+	kRegisterCalibration2 = 0x20, // backup calibration data
+
+	kRegisterIR = 0x4b00030,
+	kRegisterIRSensitivity1 = 0x4b00000,
+	kRegisterIRSensitivity2 = 0x4b0001a,
+	kRegisterIRMode = 0x4b00033,
+
+	kRegisterExtensionEncrypted = 0x4a40040,
+
+	kRegisterExtension1 = 0x4a400f0,
+	kRegisterExtension2 = 0x4a400fb,
+	kRegisterExtensionType = 0x4a400fa,
+	kRegisterExtensionCalibration = 0x4a40020,
+
+	kRegisterMotionPlusDetect = 0x4a600fa,
+	kRegisterMotionPlusInit = 0x4a600f0,
+	kRegisterMotionPlusEnable = 0x4a600fe,
+};
 
 WiimoteControllerProvider::WiimoteControllerProvider()
 	: m_running(true)
@@ -45,38 +65,42 @@ std::vector<std::shared_ptr<ControllerBase>> WiimoteControllerProvider::get_cont
 {
 	std::scoped_lock lock(m_device_mutex);
 
-    std::queue<uint32> disconnected_wiimote_indices;
-    for (auto i{0u}; i < m_wiimotes.size(); ++i){
-        if (!(m_wiimotes[i].connected = m_wiimotes[i].device->write_data({kStatusRequest, 0x00}))){
-            disconnected_wiimote_indices.push(i);
-        }
-    }
+	std::queue<uint32> disconnected_wiimote_indices;
+	for (auto i{0u}; i < m_wiimotes.size(); ++i)
+	{
+		if (!(m_wiimotes[i].connected = m_wiimotes[i].device->write_data({(uint8)OutputReportId::Status, 0x00})))
+		{
+			disconnected_wiimote_indices.push(i);
+		}
+	}
 
-    const auto valid_new_device = [&](std::shared_ptr<WiimoteDevice> & device) {
-        const auto writeable = device->write_data({kStatusRequest, 0x00});
-        const auto not_already_connected =
-                std::none_of(m_wiimotes.cbegin(), m_wiimotes.cend(),
-                             [device](const auto& it) {
-            return (*it.device == *device) && it.connected;
-        });
-        return writeable && not_already_connected;
-    };
+	const auto valid_new_device = [&](std::shared_ptr<WiimoteDevice>& device) {
+		const auto writeable = device->write_data({(uint8)OutputReportId::Status, 0x00});
+		const auto not_already_connected =
+			std::none_of(m_wiimotes.cbegin(), m_wiimotes.cend(),
+						 [device](const auto& it) {
+							 return (*it.device == *device) && it.connected;
+						 });
+		return writeable && not_already_connected;
+	};
 
 	for (auto& device : WiimoteDevice_t::get_devices())
 	{
-        if (!valid_new_device(device))
-            continue;
-        // Replace disconnected wiimotes
-        if (!disconnected_wiimote_indices.empty()){
-            const auto idx = disconnected_wiimote_indices.front();
-            disconnected_wiimote_indices.pop();
+		if (!valid_new_device(device))
+			continue;
+		// Replace disconnected wiimotes
+		if (!disconnected_wiimote_indices.empty())
+		{
+			const auto idx = disconnected_wiimote_indices.front();
+			disconnected_wiimote_indices.pop();
 
-            m_wiimotes.replace(idx, std::make_unique<Wiimote>(device));
-        }
-        // Otherwise add them
-        else {
-            m_wiimotes.push_back(std::make_unique<Wiimote>(device));
-        }
+			m_wiimotes.replace(idx, std::make_unique<Wiimote>(device));
+		}
+		// Otherwise add them
+		else
+		{
+			m_wiimotes.push_back(std::make_unique<Wiimote>(device));
+		}
 	}
 
 	std::vector<std::shared_ptr<ControllerBase>> result;
@@ -105,16 +129,16 @@ void WiimoteControllerProvider::set_rumble(size_t index, bool state)
 	std::shared_lock lock(m_device_mutex);
 	if (index >= m_wiimotes.size())
 		return;
-	
+
 	m_wiimotes[index].rumble = state;
 	lock.unlock();
 
-	send_packet(index, { kStatusRequest, 0x00 });
+	send_packet(index, {(uint8)OutputReportId::Status, 0x00});
 }
 
 void WiimoteControllerProvider::request_status(size_t index)
 {
-	send_packet(index, {kStatusRequest, 0x00});
+	send_packet(index, {(uint8)OutputReportId::Status, 0x00});
 }
 
 void WiimoteControllerProvider::set_led(size_t index, size_t player_index)
@@ -123,7 +147,7 @@ void WiimoteControllerProvider::set_led(size_t index, size_t player_index)
 	mask |= 1 << (4 + (player_index % 4));
 	if (player_index >= 4)
 		mask |= 1 << (4 + ((player_index - 3) % 4));
-	send_packet(index, {kLED, mask});
+	send_packet(index, {(uint8)OutputReportId::LED, mask});
 }
 
 uint32 WiimoteControllerProvider::get_packet_delay(size_t index)
@@ -196,441 +220,424 @@ void WiimoteControllerProvider::reader_thread()
 			++data;
 			switch (id)
 			{
-			case kStatus:
+			case InputReportId::Status:
+			{
+				cemuLog_logDebug(LogType::Force, "WiimoteControllerProvider::read_thread: kStatus");
+				new_state.buttons = (*(uint16*)data) & (~0x60E0);
+				data += 2;
+				new_state.flags = *data;
+				++data;
+				data += 2; // skip zeroes
+				new_state.battery_level = *data;
+				++data;
+
+				new_state.ir_camera.mode = set_ir_camera(index, true);
+				if (!new_state.m_calibrated)
+					calibrate(index);
+
+				if (!new_state.m_motion_plus)
+					detect_motion_plus(index);
+
+				if (HAS_FLAG(new_state.flags, kExtensionConnected))
 				{
-                    cemuLog_logDebug(LogType::Force,"WiimoteControllerProvider::read_thread: kStatus");
-					new_state.buttons = (*(uint16*)data) & (~0x60E0);
-					data += 2;
-					new_state.flags = *data;
-					++data;
-					data += 2; // skip zeroes
-					new_state.battery_level = *data;
-					++data;
-
-					new_state.ir_camera.mode = set_ir_camera(index, true);
-					if(!new_state.m_calibrated)
-						calibrate(index);
-
-					if(!new_state.m_motion_plus)
-						detect_motion_plus(index);
-
-					if (HAS_FLAG(new_state.flags, kExtensionConnected))
-					{
-                        cemuLog_logDebug(LogType::Force,"Extension flag is set");
-						if(new_state.m_extension.index() == 0)
-							request_extension(index);
-					}
-					else
-					{
-						new_state.m_extension = {};
-					}
-
-					update_report = true;
+					cemuLog_logDebug(LogType::Force, "Extension flag is set");
+					if (new_state.m_extension.index() == 0)
+						request_extension(index);
 				}
-				break;
-			case kRead:
+				else
 				{
-                    cemuLog_logDebug(LogType::Force,"WiimoteControllerProvider::read_thread: kRead");
-					new_state.buttons = (*(uint16*)data) & (~0x60E0);
-					data += 2;
-					const uint8 error_flag = *data & 0xF, size = (*data >> 4) + 1;
+					new_state.m_extension = {};
+				}
+
+				update_report = true;
+			}
+			break;
+			case InputReportId::ReadMemory:
+			{
+				cemuLog_logDebug(LogType::Force, "WiimoteControllerProvider::read_thread: kRead");
+				new_state.buttons = (*(uint16*)data) & (~0x60E0);
+				data += 2;
+				const uint8 error_flag = *data & 0xF, size = (*data >> 4) + 1;
+				++data;
+
+				if (error_flag)
+				{
+					// 7 means that wiimote is already enabled or not available
+					cemuLog_logDebug(LogType::Force, "Received error on data read {:#x}", error_flag);
+					continue;
+				}
+
+				auto address = *(betype<uint16>*)data;
+				data += 2;
+				if (address == (kRegisterCalibration & 0xFFFF))
+				{
+					cemuLog_logDebug(LogType::Force, "Calibration received");
+
+					cemu_assert(size == 8);
+
+					new_state.m_calib_acceleration.zero.x = (uint16)*data << 2;
+					++data;
+					new_state.m_calib_acceleration.zero.y = (uint16)*data << 2;
+					++data;
+					new_state.m_calib_acceleration.zero.z = (uint16)*data << 2;
+					++data;
+					// --XXYYZZ
+					new_state.m_calib_acceleration.zero.x |= (*data >> 4) & 0x3; // 5|4 -> 1|0
+					new_state.m_calib_acceleration.zero.y |= (*data >> 2) & 0x3; // 3|4 -> 1|0
+					new_state.m_calib_acceleration.zero.z |= *data & 0x3;
 					++data;
 
-					if (error_flag)
-					{
+					new_state.m_calib_acceleration.gravity.x = (uint16)*data << 2;
+					++data;
+					new_state.m_calib_acceleration.gravity.y = (uint16)*data << 2;
+					++data;
+					new_state.m_calib_acceleration.gravity.z = (uint16)*data << 2;
+					++data;
+					new_state.m_calib_acceleration.gravity.x |= (*data >> 4) & 0x3; // 5|4 -> 1|0
+					new_state.m_calib_acceleration.gravity.y |= (*data >> 2) & 0x3; // 3|4 -> 1|0
+					new_state.m_calib_acceleration.gravity.z |= *data & 0x3;
+					++data;
 
-						// 7 means that wiimote is already enabled or not available
-                        cemuLog_logDebug(LogType::Force,"Received error on data read {:#x}", error_flag);
+					new_state.m_calibrated = true;
+				}
+				else if (address == (kRegisterExtensionType & 0xFFFF))
+				{
+					if (size == 0xf)
+					{
+						cemuLog_logDebug(LogType::Force, "Extension type received but no extension connected");
 						continue;
 					}
 
-					auto address = *(betype<uint16>*)data;
-					data += 2;
-					if (address == (kRegisterCalibration & 0xFFFF))
+					cemu_assert(size == 6);
+					auto be_type = *(betype<uint64>*)data;
+					data += 6; // 48
+					be_type >>= 16;
+					be_type &= 0xFFFFFFFFFFFF;
+					switch (be_type.value())
 					{
-                        cemuLog_logDebug(LogType::Force,"Calibration received");
-
-						cemu_assert(size == 8);
-
-						new_state.m_calib_acceleration.zero.x = (uint16)*data << 2;
-						++data;
-						new_state.m_calib_acceleration.zero.y = (uint16)*data << 2;
-						++data;
-						new_state.m_calib_acceleration.zero.z = (uint16)*data << 2;
-						++data;
-						// --XXYYZZ
-						new_state.m_calib_acceleration.zero.x |= (*data >> 4) & 0x3; // 5|4 -> 1|0
-						new_state.m_calib_acceleration.zero.y |= (*data >> 2) & 0x3; // 3|4 -> 1|0
-						new_state.m_calib_acceleration.zero.z |= *data & 0x3;
-						++data;
-
-						new_state.m_calib_acceleration.gravity.x = (uint16)*data << 2;
-						++data;
-						new_state.m_calib_acceleration.gravity.y = (uint16)*data << 2;
-						++data;
-						new_state.m_calib_acceleration.gravity.z = (uint16)*data << 2;
-						++data;
-						new_state.m_calib_acceleration.gravity.x |= (*data >> 4) & 0x3; // 5|4 -> 1|0
-						new_state.m_calib_acceleration.gravity.y |= (*data >> 2) & 0x3; // 3|4 -> 1|0
-						new_state.m_calib_acceleration.gravity.z |= *data & 0x3;
-						++data;
-
-						new_state.m_calibrated = true;
-					}
-					else if (address == (kRegisterExtensionType & 0xFFFF))
-					{
-						if (size == 0xf)
-						{
-							cemuLog_logDebug(LogType::Force,"Extension type received but no extension connected");
-							continue;
-						}
-
-						cemu_assert(size == 6);
-						auto be_type = *(betype<uint64>*)data;
-						data += 6; // 48
-						be_type >>= 16;
-						be_type &= 0xFFFFFFFFFFFF;
-						switch (be_type.value())
-						{
-						case kExtensionNunchuk:
-                            cemuLog_logDebug(LogType::Force,"Extension Type Received: Nunchuk");
-							new_state.m_extension = NunchukData{};
-							break;
-						case kExtensionClassic:
-                            cemuLog_logDebug(LogType::Force,"Extension Type Received: Classic");
-							new_state.m_extension = ClassicData{};
-							break;
-						case kExtensionClassicPro:
-                            cemuLog_logDebug(LogType::Force,"Extension Type Received: Classic Pro");
-                            break;
-						case kExtensionGuitar:
-                            cemuLog_logDebug(LogType::Force,"Extension Type Received: Guitar");
-                            break;
-						case kExtensionDrums:
-                            cemuLog_logDebug(LogType::Force,"Extension Type Received: Drums");
-                            break;
-						case kExtensionBalanceBoard:
-                            cemuLog_logDebug(LogType::Force,"Extension Type Received: Balance Board");
-                            break;
-						case kExtensionMotionPlus:
-                            cemuLog_logDebug(LogType::Force,"Extension Type Received: MotionPlus");
-							set_motion_plus(index, true);
-							new_state.m_motion_plus = MotionPlusData{};
-							break;
-						case kExtensionPartialyInserted:
-                            cemuLog_logDebug(LogType::Force,"Extension only partially inserted");
-							new_state.m_extension = {};
-							request_status(index);
-							break;
-						default:
-                            cemuLog_logDebug(LogType::Force,"Unknown extension: {:#x}", be_type.value());
-                            new_state.m_extension = {};
-							break;
-						}
-
-						if (new_state.m_extension.index() != 0)
-							send_read_packet(index, kRegisterMemory, kRegisterExtensionCalibration, 0x10);
-					}
-					else if (address == (kRegisterExtensionCalibration & 0xFFFF))
-					{
-						cemu_assert(size == 0x10);
-                        cemuLog_logDebug(LogType::Force,"Extension calibration received");
-						std::visit(
-							overloaded
-							{
-								[](auto)
-								{
-								},
-								[data](MotionPlusData& mp)
-								{
-									// TODO fix
-								},
-								[data](NunchukData& nunchuk)
-								{
-									std::array<uint8, 14> zero{};
-									if (memcmp(zero.data(), data, zero.size()) == 0)
-									{
-                                        cemuLog_logDebug(LogType::Force,"Extension calibration data is zero");
-										return;
-									}
-
-									nunchuk.calibration.zero.x = (uint16)data[0] << 2;
-									nunchuk.calibration.zero.y = (uint16)data[1] << 2;
-									nunchuk.calibration.zero.z = (uint16)data[2] << 2;
-									// --XXYYZZ
-									nunchuk.calibration.zero.x |= (data[3] >> 4) & 0x3; // 5|4 -> 1|0
-									nunchuk.calibration.zero.y |= (data[3] >> 2) & 0x3; // 3|4 -> 1|0
-									nunchuk.calibration.zero.z |= data[3] & 0x3;
-
-									nunchuk.calibration.gravity.x = (uint16)data[4] << 2;;
-									nunchuk.calibration.gravity.y = (uint16)data[5] << 2;;
-									nunchuk.calibration.gravity.z = (uint16)data[6] << 2;;
-									// --XXYYZZ
-									nunchuk.calibration.gravity.x |= (data[7] >> 4) & 0x3; // 5|4 -> 1|0
-									nunchuk.calibration.gravity.y |= (data[7] >> 2) & 0x3; // 3|4 -> 1|0
-									nunchuk.calibration.gravity.z |= data[7] & 0x3;
-
-									nunchuk.calibration.max.x = data[8];
-									nunchuk.calibration.max.y = data[11];
-
-									nunchuk.calibration.min.x = data[9];
-									nunchuk.calibration.min.y = data[12];
-
-									nunchuk.calibration.center.x = data[10];
-									nunchuk.calibration.center.y = data[13];
-								}
-							}, new_state.m_extension);
-					}
-					else
-					{
-                        cemuLog_logDebug(LogType::Force,"Unhandled read data received");
-                        continue;
+					case kExtensionNunchuk:
+						cemuLog_logDebug(LogType::Force, "Extension Type Received: Nunchuk");
+						new_state.m_extension = NunchukData{};
+						break;
+					case kExtensionClassic:
+						cemuLog_logDebug(LogType::Force, "Extension Type Received: Classic");
+						new_state.m_extension = ClassicData{};
+						break;
+					case kExtensionClassicPro:
+						cemuLog_logDebug(LogType::Force, "Extension Type Received: Classic Pro");
+						break;
+					case kExtensionGuitar:
+						cemuLog_logDebug(LogType::Force, "Extension Type Received: Guitar");
+						break;
+					case kExtensionDrums:
+						cemuLog_logDebug(LogType::Force, "Extension Type Received: Drums");
+						break;
+					case kExtensionBalanceBoard:
+						cemuLog_logDebug(LogType::Force, "Extension Type Received: Balance Board");
+						break;
+					case kExtensionMotionPlus:
+						cemuLog_logDebug(LogType::Force, "Extension Type Received: MotionPlus");
+						set_motion_plus(index, true);
+						new_state.m_motion_plus = MotionPlusData{};
+						break;
+					case kExtensionPartialyInserted:
+						cemuLog_logDebug(LogType::Force, "Extension only partially inserted");
+						new_state.m_extension = {};
+						request_status(index);
+						break;
+					default:
+						cemuLog_logDebug(LogType::Force, "Unknown extension: {:#x}", be_type.value());
+						new_state.m_extension = {};
+						break;
 					}
 
-					update_report = true;
+					if (new_state.m_extension.index() != 0)
+						send_read_packet(index, kRegisterExtensionCalibration, 0x10);
 				}
-				break;
-            case kAcknowledge:
-                {
-                    new_state.buttons = *(uint16*)data & (~0x60E0);
-                    data += 2;
-                    const auto report_id = *data++;
-                    const auto error = *data++;
-                    if (error)
-                        cemuLog_logDebug(LogType::Force, "Error {:#x} from output report {:#x}", error, report_id);
-                    break;
-                }
-			case kDataCore:
+				else if (address == (kRegisterExtensionCalibration & 0xFFFF))
 				{
-					// 30 BB BB
-					new_state.buttons = *(uint16*)data & (~0x60E0);
-					data += 2;
-					break;
-				}
-			case kDataCoreAcc:
-				{
-					// 31 BB BB AA AA AA
-					new_state.buttons = *(uint16*)data & (~0x60E0);
-					parse_acceleration(new_state, data);
-					break;
-				}
-			case kDataCoreExt8:
-				{
-					// 32 BB BB EE EE EE EE EE EE EE EE
-					new_state.buttons = *(uint16*)data & (~0x60E0);
-					data += 2;
-					break;
-				}
-			case kDataCoreAccIR:
-				{
-					// 33 BB BB AA AA AA II II II II II II II II II II II II 
-					new_state.buttons = *(uint16*)data & (~0x60E0);
-					parse_acceleration(new_state, data);
-					data += parse_ir(new_state, data);
-					break;
-				}
-			case kDataCoreExt19:
-				{
-					// 34 BB BB EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE 
-					new_state.buttons = *(uint16*)data & (~0x60E0);
-					data += 2;
-					break;
-				}
-			case kDataCoreAccExt:
-				{
-					// 35 BB BB AA AA AA EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE
-					new_state.buttons = *(uint16*)data & (~0x60E0);
-					parse_acceleration(new_state, data);
-					break;
-				}
-			case kDataCoreIRExt:
-				{
-					// 36 BB BB II II II II II II II II II II EE EE EE EE EE EE EE EE EE
-					new_state.buttons = *(uint16*)data & (~0x60E0);
-					data += 2;
-					break;
-				}
-			case kDataCoreAccIRExt:
-				{
-					// 37 BB BB AA AA AA II II II II II II II II II II EE EE EE EE EE EE
-					new_state.buttons = *(uint16*)data & (~0x60E0);
-					parse_acceleration(new_state, data);
-					data += parse_ir(new_state, data); // 10
-
+					cemu_assert(size == 0x10);
+					cemuLog_logDebug(LogType::Force, "Extension calibration received");
 					std::visit(
-						overloaded
-						{
-							[](auto)
-							{
+						overloaded{
+							[](auto) {
 							},
-							[data](MotionPlusData& mp) mutable
-							{
-								glm::vec<3, uint16> raw;
-								raw.x = *data;
-								++data;
-								raw.y = *data;
-								++data;
-								raw.z = *data;
-								++data;
-
-								raw.x |= (uint16)*data << 6; // 7|2 -> 13|8
-								mp.slow_yaw = *data & 2;
-								mp.slow_pitch = *data & 1;
-								++data;
-
-								raw.y |= (uint16)*data << 6; // 7|2 -> 13|8
-								mp.slow_roll = *data & 2;
-								mp.extension_connected = *data & 1;
-								++data;
-
-								raw.z |= (uint16)*data << 6; // 7|2 -> 13|8
-
-								auto& calib = mp.calibration;
-
-								glm::vec3 orientation = raw;
-								/*orientation -= calib.zero;
-	
-								Vector3<float> tmp = calib.gravity;
-								tmp -= calib.zero;
-								orientation /= tmp;*/
-
-								mp.orientation = orientation;
-                                cemuLog_logDebug(LogType::Force,"MotionPlus: {:.2f}, {:.2f} {:.2f}", mp.orientation.x, mp.orientation.y, mp.orientation.z);
+							[data](MotionPlusData& mp) {
+								// TODO fix
 							},
-							[data](NunchukData& nunchuk) mutable
-							{
-								nunchuk.raw_axis.x = *data;
-								++data;
-								nunchuk.raw_axis.y = *data;
-								++data;
-
-								glm::vec<3, uint16> raw_acc;
-								raw_acc.x = (uint16)*data << 2;
-								++data;
-								raw_acc.y = (uint16)*data << 2;
-								++data;
-								raw_acc.z = (uint16)*data << 2;
-								++data;
-								nunchuk.z = (*data & 1) == 0;
-								nunchuk.c = (*data & 2) == 0;
-
-								raw_acc.x |= (*data >> 2) & 0x3; // 3|2 -> 1|0
-								raw_acc.y |= (*data >> 4) & 0x3; // 5|4 -> 1|0
-								raw_acc.z |= (*data >> 6) & 0x3; // 7|6 -> 1|0
-
-								auto& calib = nunchuk.calibration;
-
-								if (nunchuk.raw_axis.x < nunchuk.calibration.center.x) // [-1, 0]
-									nunchuk.axis.x = ((float)nunchuk.raw_axis.x - calib.min.x) / ((float)nunchuk.
-										calibration.center.x - calib.min.x + 0.012f) - 1.0f;
-								else // [0, 1]
-									nunchuk.axis.x = (float)(nunchuk.raw_axis.x - nunchuk.calibration.center.x) / (
-										nunchuk.calibration.max.x - nunchuk.calibration.center.x + 0.012f);
-
-								if (nunchuk.raw_axis.y <= nunchuk.calibration.center.y) // [-1, 0]
-									nunchuk.axis.y = ((float)nunchuk.raw_axis.y - calib.min.y) / ((float)nunchuk.
-										calibration.center.y - calib.min.y + 0.012f) - 1.0f;
-								else // [0, 1]
-									nunchuk.axis.y = (float)(nunchuk.raw_axis.y - nunchuk.calibration.center.y) / (
-										nunchuk.calibration.max.y - nunchuk.calibration.center.y);
-
-								glm::vec3 acceleration = raw_acc;
-								nunchuk.prev_acceleration = nunchuk.acceleration;
-								nunchuk.acceleration = acceleration - glm::vec3(calib.zero);
-
-								float acc[3]{ -nunchuk.acceleration.x, -nunchuk.acceleration.z, nunchuk.acceleration.y };
-								const auto grav = nunchuk.calibration.gravity - nunchuk.calibration.zero;
-
-								auto tacc = nunchuk.acceleration;
-								auto pacc = nunchuk.prev_acceleration;
-								if (grav != glm::vec<3, uint16>{})
+							[data](NunchukData& nunchuk) {
+								std::array<uint8, 14> zero{};
+								if (memcmp(zero.data(), data, zero.size()) == 0)
 								{
-									acc[0] /= (float)grav.x;
-									acc[1] /= (float)grav.y;
-									acc[2] /= (float)grav.z;
-
-									tacc.x /= (float)grav.x;
-									pacc.x /= (float)grav.x;
-
-									tacc.y /= (float)grav.y;
-									pacc.y /= (float)grav.y;
-
-									tacc.z /= (float)grav.z;
-									pacc.z /= (float)grav.z;
+									cemuLog_logDebug(LogType::Force, "Extension calibration data is zero");
+									return;
 								}
-								float zero3[3]{};
-								float zero4[4]{};
 
+								nunchuk.calibration.zero.x = (uint16)data[0] << 2;
+								nunchuk.calibration.zero.y = (uint16)data[1] << 2;
+								nunchuk.calibration.zero.z = (uint16)data[2] << 2;
+								// --XXYYZZ
+								nunchuk.calibration.zero.x |= (data[3] >> 4) & 0x3; // 5|4 -> 1|0
+								nunchuk.calibration.zero.y |= (data[3] >> 2) & 0x3; // 3|4 -> 1|0
+								nunchuk.calibration.zero.z |= data[3] & 0x3;
 
-								nunchuk.motion_sample = MotionSample(
-									acc,
-									glm::length(tacc - pacc),
-									zero3,
-									zero3,
-									zero4
-								);
-                                cemuLog_logDebug(LogType::Force,"Nunchuk: Z={}, C={} | {}, {} | {:.2f}, {:.2f}, {:.2f}",
-                                                 nunchuk.z, nunchuk.c,
-                                                 nunchuk.axis.x, nunchuk.axis.y,
-                                                 RadToDeg(nunchuk.acceleration.x), RadToDeg(nunchuk.acceleration.y),
-                                                 RadToDeg(nunchuk.acceleration.z));
-							},
-							[data](ClassicData& classic) mutable
-							{
-								classic.left_raw_axis.x = *data & 0x3F;
-								classic.right_raw_axis.x = (*data & 0xC0) >> 3; // 7|6 -> 4|3
-								++data;
+								nunchuk.calibration.gravity.x = (uint16)data[4] << 2;
+								;
+								nunchuk.calibration.gravity.y = (uint16)data[5] << 2;
+								;
+								nunchuk.calibration.gravity.z = (uint16)data[6] << 2;
+								;
+								// --XXYYZZ
+								nunchuk.calibration.gravity.x |= (data[7] >> 4) & 0x3; // 5|4 -> 1|0
+								nunchuk.calibration.gravity.y |= (data[7] >> 2) & 0x3; // 3|4 -> 1|0
+								nunchuk.calibration.gravity.z |= data[7] & 0x3;
 
-								classic.left_raw_axis.y = *data & 0x3F;
-								classic.right_raw_axis.x |= (*data & 0xC0) >> 5; // 7|6 -> 2|1
-								++data;
+								nunchuk.calibration.max.x = data[8];
+								nunchuk.calibration.max.y = data[11];
 
-								classic.right_raw_axis.y = *data & 0x1F;
-								classic.raw_trigger.x = (*data & 0x60) >> 2; // 6|5 -> 4|3
-								classic.right_raw_axis.x |= (*data & 0x80) >> 7; // 7 -> 0
-								++data;
+								nunchuk.calibration.min.x = data[9];
+								nunchuk.calibration.min.y = data[12];
 
-								classic.raw_trigger.x |= (*data & 0xE0) >> 5; // 7|5 -> 2|0
-								classic.raw_trigger.y = (*data & 0x1F);
-								++data;
-
-								classic.buttons = ~(*(uint16*)data);
-								data += 2;
-
-								classic.left_axis = classic.left_raw_axis;
-								classic.left_axis /= 63.0f;
-								classic.left_axis = classic.left_axis * 2.0f - 1.0f;
-
-								classic.right_axis = classic.right_raw_axis;
-								classic.right_axis /= 31.0f;
-								classic.right_axis = classic.right_axis * 2.0f - 1.0f;
-
-								classic.trigger = classic.raw_trigger;
-								classic.trigger /= 31.0f;
-                                cemuLog_logDebug(LogType::Force,"Classic Controller: Buttons={:b} | {}, {} | {}, {} | {}, {}",
-                                                 classic.buttons, classic.left_axis.x, classic.left_axis.y,
-                                                 classic.right_axis.x, classic.right_axis.y, classic.trigger.x,
-                                                 classic.trigger.y);
-
-							}
-						}, new_state.m_extension);
-
-
-					break;
+								nunchuk.calibration.center.x = data[10];
+								nunchuk.calibration.center.y = data[13];
+							}},
+						new_state.m_extension);
 				}
-			case kDataExt:
+				else
 				{
-					// 3d EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE
-					break;
+					cemuLog_logDebug(LogType::Force, "Unhandled read data received");
+					continue;
 				}
+
+				update_report = true;
+			}
+			break;
+			case InputReportId::Acknowledge:
+			{
+				new_state.buttons = *(uint16*)data & (~0x60E0);
+				data += 2;
+				const auto report_id = *data++;
+				const auto error = *data++;
+				if (error)
+					cemuLog_logDebug(LogType::Force, "Error {:#x} from output report {:#x}", error, report_id);
+				break;
+			}
+			case InputReportId::Core: {
+				// 30 BB BB
+				new_state.buttons = *(uint16*)data & (~0x60E0);
+				data += 2;
+				break;
+			} case InputReportId::CoreAcc:
+			{
+				// 31 BB BB AA AA AA
+				new_state.buttons = *(uint16*)data & (~0x60E0);
+				parse_acceleration(new_state, data);
+				break;
+			}
+			case InputReportId::CoreExt8:
+			{
+				// 32 BB BB EE EE EE EE EE EE EE EE
+				new_state.buttons = *(uint16*)data & (~0x60E0);
+				data += 2;
+				break;
+			}
+			case InputReportId::CoreAccIR12:
+			{
+				// 33 BB BB AA AA AA II II II II II II II II II II II II
+				new_state.buttons = *(uint16*)data & (~0x60E0);
+				parse_acceleration(new_state, data);
+				data += parse_ir(new_state, data);
+				break;
+			}
+			case InputReportId::CoreExt19:
+			{
+				// 34 BB BB EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE
+				new_state.buttons = *(uint16*)data & (~0x60E0);
+				data += 2;
+				break;
+			}
+			case InputReportId::CoreAccExt16:
+			{
+				// 35 BB BB AA AA AA EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE
+				new_state.buttons = *(uint16*)data & (~0x60E0);
+				parse_acceleration(new_state, data);
+				break;
+			}
+			case InputReportId::CoreIR10Ext9:
+			{
+				// 36 BB BB II II II II II II II II II II EE EE EE EE EE EE EE EE EE
+				new_state.buttons = *(uint16*)data & (~0x60E0);
+				data += 2;
+				break;
+			}
+			case InputReportId::CoreAccIR10Ext6:
+			{
+				// 37 BB BB AA AA AA II II II II II II II II II II EE EE EE EE EE EE
+				new_state.buttons = *(uint16*)data & (~0x60E0);
+				parse_acceleration(new_state, data);
+				data += parse_ir(new_state, data); // 10
+
+				std::visit(
+					overloaded{
+						[](auto) {
+						},
+						[data](MotionPlusData& mp) mutable {
+							glm::vec<3, uint16> raw;
+							raw.x = *data;
+							++data;
+							raw.y = *data;
+							++data;
+							raw.z = *data;
+							++data;
+
+							raw.x |= (uint16)*data << 6; // 7|2 -> 13|8
+							mp.slow_yaw = *data & 2;
+							mp.slow_pitch = *data & 1;
+							++data;
+
+							raw.y |= (uint16)*data << 6; // 7|2 -> 13|8
+							mp.slow_roll = *data & 2;
+							mp.extension_connected = *data & 1;
+							++data;
+
+							raw.z |= (uint16)*data << 6; // 7|2 -> 13|8
+
+							auto& calib = mp.calibration;
+
+							glm::vec3 orientation = raw;
+							/*orientation -= calib.zero;
+
+							Vector3<float> tmp = calib.gravity;
+							tmp -= calib.zero;
+							orientation /= tmp;*/
+
+							mp.orientation = orientation;
+							cemuLog_logDebug(LogType::Force, "MotionPlus: {:.2f}, {:.2f} {:.2f}", mp.orientation.x, mp.orientation.y, mp.orientation.z);
+						},
+						[data](NunchukData& nunchuk) mutable {
+							nunchuk.raw_axis.x = *data;
+							++data;
+							nunchuk.raw_axis.y = *data;
+							++data;
+
+							glm::vec<3, uint16> raw_acc;
+							raw_acc.x = (uint16)*data << 2;
+							++data;
+							raw_acc.y = (uint16)*data << 2;
+							++data;
+							raw_acc.z = (uint16)*data << 2;
+							++data;
+							nunchuk.z = (*data & 1) == 0;
+							nunchuk.c = (*data & 2) == 0;
+
+							raw_acc.x |= (*data >> 2) & 0x3; // 3|2 -> 1|0
+							raw_acc.y |= (*data >> 4) & 0x3; // 5|4 -> 1|0
+							raw_acc.z |= (*data >> 6) & 0x3; // 7|6 -> 1|0
+
+							auto& calib = nunchuk.calibration;
+
+							if (nunchuk.raw_axis.x < nunchuk.calibration.center.x) // [-1, 0]
+								nunchuk.axis.x = ((float)nunchuk.raw_axis.x - calib.min.x) / ((float)nunchuk.calibration.center.x - calib.min.x + 0.012f) - 1.0f;
+							else // [0, 1]
+								nunchuk.axis.x = (float)(nunchuk.raw_axis.x - nunchuk.calibration.center.x) / (nunchuk.calibration.max.x - nunchuk.calibration.center.x + 0.012f);
+
+							if (nunchuk.raw_axis.y <= nunchuk.calibration.center.y) // [-1, 0]
+								nunchuk.axis.y = ((float)nunchuk.raw_axis.y - calib.min.y) / ((float)nunchuk.calibration.center.y - calib.min.y + 0.012f) - 1.0f;
+							else // [0, 1]
+								nunchuk.axis.y = (float)(nunchuk.raw_axis.y - nunchuk.calibration.center.y) / (nunchuk.calibration.max.y - nunchuk.calibration.center.y);
+
+							glm::vec3 acceleration = raw_acc;
+							nunchuk.prev_acceleration = nunchuk.acceleration;
+							nunchuk.acceleration = acceleration - glm::vec3(calib.zero);
+
+							float acc[3]{-nunchuk.acceleration.x, -nunchuk.acceleration.z, nunchuk.acceleration.y};
+							const auto grav = nunchuk.calibration.gravity - nunchuk.calibration.zero;
+
+							auto tacc = nunchuk.acceleration;
+							auto pacc = nunchuk.prev_acceleration;
+							if (grav != glm::vec<3, uint16>{})
+							{
+								acc[0] /= (float)grav.x;
+								acc[1] /= (float)grav.y;
+								acc[2] /= (float)grav.z;
+
+								tacc.x /= (float)grav.x;
+								pacc.x /= (float)grav.x;
+
+								tacc.y /= (float)grav.y;
+								pacc.y /= (float)grav.y;
+
+								tacc.z /= (float)grav.z;
+								pacc.z /= (float)grav.z;
+							}
+							float zero3[3]{};
+							float zero4[4]{};
+
+							nunchuk.motion_sample = MotionSample(
+								acc,
+								glm::length(tacc - pacc),
+								zero3,
+								zero3,
+								zero4);
+							cemuLog_logDebug(LogType::Force, "Nunchuk: Z={}, C={} | {}, {} | {:.2f}, {:.2f}, {:.2f}",
+											 nunchuk.z, nunchuk.c,
+											 nunchuk.axis.x, nunchuk.axis.y,
+											 RadToDeg(nunchuk.acceleration.x), RadToDeg(nunchuk.acceleration.y),
+											 RadToDeg(nunchuk.acceleration.z));
+						},
+						[data](ClassicData& classic) mutable {
+							classic.left_raw_axis.x = *data & 0x3F;
+							classic.right_raw_axis.x = (*data & 0xC0) >> 3; // 7|6 -> 4|3
+							++data;
+
+							classic.left_raw_axis.y = *data & 0x3F;
+							classic.right_raw_axis.x |= (*data & 0xC0) >> 5; // 7|6 -> 2|1
+							++data;
+
+							classic.right_raw_axis.y = *data & 0x1F;
+							classic.raw_trigger.x = (*data & 0x60) >> 2;	 // 6|5 -> 4|3
+							classic.right_raw_axis.x |= (*data & 0x80) >> 7; // 7 -> 0
+							++data;
+
+							classic.raw_trigger.x |= (*data & 0xE0) >> 5; // 7|5 -> 2|0
+							classic.raw_trigger.y = (*data & 0x1F);
+							++data;
+
+							classic.buttons = ~(*(uint16*)data);
+							data += 2;
+
+							classic.left_axis = classic.left_raw_axis;
+							classic.left_axis /= 63.0f;
+							classic.left_axis = classic.left_axis * 2.0f - 1.0f;
+
+							classic.right_axis = classic.right_raw_axis;
+							classic.right_axis /= 31.0f;
+							classic.right_axis = classic.right_axis * 2.0f - 1.0f;
+
+							classic.trigger = classic.raw_trigger;
+							classic.trigger /= 31.0f;
+							cemuLog_logDebug(LogType::Force, "Classic Controller: Buttons={:b} | {}, {} | {}, {} | {}, {}",
+											 classic.buttons, classic.left_axis.x, classic.left_axis.y,
+											 classic.right_axis.x, classic.right_axis.y, classic.trigger.x,
+											 classic.trigger.y);
+						}},
+					new_state.m_extension);
+
+				break;
+			}
+			case InputReportId::Ext22:
+			{
+				// 3d EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE
+				break;
+			}
 			default:
-                cemuLog_logDebug(LogType::Force,"unhandled input packet id {} for wiimote {}", id, index);
+				cemuLog_logDebug(LogType::Force, "unhandled input packet id {} for wiimote {}", id, index);
 			}
 
 			// update motion data
-			//const auto motionnow = std::chrono::high_resolution_clock::now();
-			//const auto delta_time = (float)std::chrono::duration_cast<std::chrono::milliseconds>(motionnow - new_state.m_last_motion_timestamp).count() / 1000.0f;
-			//new_state.m_last_motion_timestamp = motionnow;
+			// const auto motionnow = std::chrono::high_resolution_clock::now();
+			// const auto delta_time = (float)std::chrono::duration_cast<std::chrono::milliseconds>(motionnow - new_state.m_last_motion_timestamp).count() / 1000.0f;
+			// new_state.m_last_motion_timestamp = motionnow;
 
 			float acc[3]{-new_state.m_acceleration.x, -new_state.m_acceleration.z, new_state.m_acceleration.y};
 			const auto grav = new_state.m_calib_acceleration.gravity - new_state.m_calib_acceleration.zero;
@@ -655,14 +662,12 @@ void WiimoteControllerProvider::reader_thread()
 			float zero3[3]{};
 			float zero4[4]{};
 
-
 			new_state.motion_sample = MotionSample(
 				acc,
 				glm::length(tacc - pacc),
 				zero3,
 				zero3,
-				zero4
-			);
+				zero4);
 
 			std::unique_lock data_lock(wiimote.mutex);
 			wiimote.state = new_state;
@@ -794,7 +799,6 @@ void WiimoteControllerProvider::calculate_ir_position(WiimoteState& wiimote_stat
 	}
 }
 
-
 sint32 WiimoteControllerProvider::parse_ir(WiimoteState& wiimote_state, const uint8* data)
 {
 	switch (wiimote_state.ir_camera.mode)
@@ -803,63 +807,63 @@ sint32 WiimoteControllerProvider::parse_ir(WiimoteState& wiimote_state, const ui
 		wiimote_state.ir_camera.dots = {};
 		return 0;
 	case kBasicIR:
+	{
+		const auto ir = (Messages::BasicIR*)data;
+		for (int i = 0; i < 2; ++i)
 		{
-			const auto ir = (BasicIR*)data;
-			for (int i = 0; i < 2; ++i)
-			{
-				auto& dot1 = wiimote_state.ir_camera.dots[i * 2];
-				auto& dot2 = wiimote_state.ir_camera.dots[i * 2 + 1];
+			auto& dot1 = wiimote_state.ir_camera.dots[i * 2];
+			auto& dot2 = wiimote_state.ir_camera.dots[i * 2 + 1];
 
-				dot1.raw.x = ir[i].x1 | (ir[i].bits.x1 << 8); // 9|8
-				dot1.raw.y = ir[i].y1 | (ir[i].bits.y1 << 8);
-				dot1.size = 0;
+			dot1.raw.x = ir[i].x1 | (ir[i].bits.x1 << 8); // 9|8
+			dot1.raw.y = ir[i].y1 | (ir[i].bits.y1 << 8);
+			dot1.size = 0;
 
-				dot2.raw.x = ir[i].x2 | (ir[i].bits.x2 << 8);
-				dot2.raw.y = ir[i].y2 | (ir[i].bits.y2 << 8);
-				dot2.size = 0;
+			dot2.raw.x = ir[i].x2 | (ir[i].bits.x2 << 8);
+			dot2.raw.y = ir[i].y2 | (ir[i].bits.y2 << 8);
+			dot2.size = 0;
 
-				dot1.visible = dot1.raw != glm::vec<2, uint16>(0x3ff, 0x3ff);
-				if (dot1.visible)
-					dot1.pos = glm::vec2(1.0f - dot1.raw.x / 1023.0f, (float)dot1.raw.y / 768.0f);
-				else
-					dot1.pos = {};
+			dot1.visible = dot1.raw != glm::vec<2, uint16>(0x3ff, 0x3ff);
+			if (dot1.visible)
+				dot1.pos = glm::vec2(1.0f - dot1.raw.x / 1023.0f, (float)dot1.raw.y / 768.0f);
+			else
+				dot1.pos = {};
 
-				dot2.visible = dot2.raw != glm::vec<2, uint16>(0x3ff, 0x3ff);
-				if (dot2.visible)
-					dot2.pos = glm::vec2(1.0f - dot2.raw.x / 1023.0f, (float)dot2.raw.y / 768.0f);
-				else
-					dot2.pos = {};
-			}
-
-			rotate_ir(wiimote_state);
-			calculate_ir_position(wiimote_state);
-			return sizeof(BasicIR) * 2;
+			dot2.visible = dot2.raw != glm::vec<2, uint16>(0x3ff, 0x3ff);
+			if (dot2.visible)
+				dot2.pos = glm::vec2(1.0f - dot2.raw.x / 1023.0f, (float)dot2.raw.y / 768.0f);
+			else
+				dot2.pos = {};
 		}
+
+		rotate_ir(wiimote_state);
+		calculate_ir_position(wiimote_state);
+		return sizeof(Messages::BasicIR) * 2;
+	}
 	case kExtendedIR:
+	{
+		const auto ir = (Messages::ExtendedIR*)data;
+		for (int i = 0; i < 4; ++i)
 		{
-			const auto ir = (ExtendedIR*)data;
-			for (int i = 0; i < 4; ++i)
-			{
-				auto& dot = wiimote_state.ir_camera.dots[i];
-				dot.raw.x = ir[i].x;
-				dot.raw.y = ir[i].y;
+			auto& dot = wiimote_state.ir_camera.dots[i];
+			dot.raw.x = ir[i].x;
+			dot.raw.y = ir[i].y;
 
-				dot.raw.x |= (uint16)ir[i].bits.x << 8; // 9|8
-				dot.raw.y |= (uint16)ir[i].bits.y << 8; // 9|8
+			dot.raw.x |= (uint16)ir[i].bits.x << 8; // 9|8
+			dot.raw.y |= (uint16)ir[i].bits.y << 8; // 9|8
 
-				dot.size = ir[i].bits.size;
+			dot.size = ir[i].bits.size;
 
-				dot.visible = dot.raw != glm::vec<2, uint16>(0x3ff, 0x3ff);
-				if (dot.visible)
-					dot.pos = glm::vec2(1.0f - dot.raw.x / 1023.0f, (float)dot.raw.y / 768.0f);
-				else
-					dot.pos = {};
-			}
-
-			rotate_ir(wiimote_state);
-			calculate_ir_position(wiimote_state);
-			return sizeof(ExtendedIR) * 4;
+			dot.visible = dot.raw != glm::vec<2, uint16>(0x3ff, 0x3ff);
+			if (dot.visible)
+				dot.pos = glm::vec2(1.0f - dot.raw.x / 1023.0f, (float)dot.raw.y / 768.0f);
+			else
+				dot.pos = {};
 		}
+
+		rotate_ir(wiimote_state);
+		calculate_ir_position(wiimote_state);
+		return sizeof(Messages::ExtendedIR) * 4;
+	}
 	default:
 		cemu_assert(false);
 		break;
@@ -870,28 +874,28 @@ sint32 WiimoteControllerProvider::parse_ir(WiimoteState& wiimote_state, const ui
 void WiimoteControllerProvider::request_extension(size_t index)
 {
 	// send_write_packet(index, kRegisterMemory, kRegisterExtensionEncrypted, { 0x00 });
-	send_write_packet(index, kRegisterMemory, kRegisterExtension1, {0x55});
-	send_write_packet(index, kRegisterMemory, kRegisterExtension2, {0x00});
-	send_read_packet(index, kRegisterMemory, kRegisterExtensionType, 6);
+	send_write_packet(index,  kRegisterExtension1, {0x55});
+	send_write_packet(index,  kRegisterExtension2, {0x00});
+	send_read_packet(index, kRegisterExtensionType, 6);
 }
 
 void WiimoteControllerProvider::detect_motion_plus(size_t index)
 {
-	send_read_packet(index, kRegisterMemory, kRegisterMotionPlusDetect, 6);
+	send_read_packet(index,  kRegisterMotionPlusDetect, 6);
 }
 
 void WiimoteControllerProvider::set_motion_plus(size_t index, bool state)
 {
-	if (state) {
-		send_write_packet(index, kRegisterMemory, kRegisterMotionPlusInit, { 0x55 });
-		send_write_packet(index, kRegisterMemory, kRegisterMotionPlusEnable, { 0x04 });
+	if (state)
+	{
+		send_write_packet(index, kRegisterMotionPlusInit, {0x55});
+		send_write_packet(index, kRegisterMotionPlusEnable, {0x04});
 	}
 	else
 	{
-		send_write_packet(index, kRegisterMemory, kRegisterExtension1, { 0x55 });
+		send_write_packet(index, kRegisterExtension1, {0x55});
 	}
 }
-
 
 void WiimoteControllerProvider::writer_thread()
 {
@@ -954,7 +958,7 @@ void WiimoteControllerProvider::writer_thread()
 
 void WiimoteControllerProvider::calibrate(size_t index)
 {
-	send_read_packet(index, kEEPROMMemory, kRegisterCalibration, 8);
+	send_read_packet(index, kRegisterCalibration, 8);
 }
 
 void WiimoteControllerProvider::update_report_type(size_t index)
@@ -968,24 +972,24 @@ void WiimoteControllerProvider::update_report_type(size_t index)
 
 	InputReportId report_type;
 	if (extension && ir && motion)
-		report_type = kDataCoreAccIRExt;
+		report_type = InputReportId::CoreAccIR10Ext6;
 	else if (extension && ir)
-		report_type = kDataCoreIRExt;
+		report_type = InputReportId::CoreIR10Ext9;
 	else if (extension && motion)
-		report_type = kDataCoreAccExt;
+		report_type = InputReportId::CoreAccExt16;
 	else if (ir && motion)
-		report_type = kDataCoreAccIR;
+		report_type = InputReportId::CoreAccIR12;
 	else if (extension)
-		report_type = kDataCoreExt19;
+		report_type = InputReportId::CoreExt19;
 	else if (ir)
-		report_type = kDataCoreAccIR;
+		report_type = InputReportId::CoreAccIR12;
 	else if (motion)
-		report_type = kDataCoreAcc;
+		report_type = InputReportId::CoreAcc;
 	else
-		report_type = kDataCore;
+		report_type = InputReportId::Core;
 
-    cemuLog_logDebug(LogType::Force,"Setting report type to {}", report_type);
-	send_packet(index, {kType, 0x04, report_type});
+	cemuLog_logDebug(LogType::Force, "Setting report type to {}", report_type);
+	send_packet(index, {(uint8)OutputReportId::Report, 0x04, (uint8)report_type});
 
 	state.ir_camera.mode = set_ir_camera(index, true);
 }
@@ -1009,16 +1013,16 @@ IRMode WiimoteControllerProvider::set_ir_camera(size_t index, bool state)
 	wiimote_state.ir_camera.mode = mode;
 
 	const uint8_t data = state ? 0x04 : 0x00;
-	send_packet(index, {kIR, data});
-	send_packet(index, {kIR2, data});
+	send_packet(index, {(uint8)OutputReportId::IRPixelClockEnable, data});
+	send_packet(index, {(uint8)OutputReportId::IREnable, data});
 	if (state)
 	{
-		send_write_packet(index, kRegisterMemory, kRegisterIR, {0x08});
-		send_write_packet(index, kRegisterMemory, kRegisterIRSensitivity1,
-		                  {0x02, 0x00, 0x00, 0x71, 0x01, 0x00, 0xaa, 0x00, 0x64});
-		send_write_packet(index, kRegisterMemory, kRegisterIRSensitivity2, {0x63, 0x03});
-		send_write_packet(index, kRegisterMemory, kRegisterIRMode, {(uint8)mode});
-		send_write_packet(index, kRegisterMemory, kRegisterIR, {0x08});
+		send_write_packet(index, kRegisterIR, {0x08});
+		send_write_packet(index, kRegisterIRSensitivity1,
+						  {0x02, 0x00, 0x00, 0x71, 0x01, 0x00, 0xaa, 0x00, 0x64});
+		send_write_packet(index,  kRegisterIRSensitivity2, {0x63, 0x03});
+		send_write_packet(index,  kRegisterIRMode, {(uint8)mode});
+		send_write_packet(index,  kRegisterIR, {0x08});
 	}
 
 	update_report_type(index);
@@ -1040,25 +1044,23 @@ void WiimoteControllerProvider::send_packet(size_t index, std::vector<uint8> dat
 	m_writer_cond.notify_one();
 }
 
-void WiimoteControllerProvider::send_read_packet(size_t index, MemoryType type, RegisterAddress address, uint16 size)
+void WiimoteControllerProvider::send_read_packet(size_t index, uint32 address, uint16 size)
 {
 	std::vector<uint8> data(7);
-	data[0] = kReadMemory;
-	data[1] = type;
-	*(betype<uint32>*)(data.data() + 2) = (address & 0xFFFFFF) << 8; // only uint24
+	data[0] = (uint8)OutputReportId::ReadMemory;
+	*(betype<uint32>*)(data.data() + 1) = address; // only uint24
 	*(betype<uint16>*)(data.data() + 2 + 3) = size;
 
 	send_packet(index, std::move(data));
 }
 
-void WiimoteControllerProvider::send_write_packet(size_t index, MemoryType type, RegisterAddress address,
-                                                  const std::vector<uint8>& data)
+void WiimoteControllerProvider::send_write_packet(size_t index, uint32 address,
+												  const std::vector<uint8>& data)
 {
 	cemu_assert(data.size() <= 16);
 	std::vector<uint8> packet(6 + 16);
-	packet[0] = kWriteMemory;
-	packet[1] = type;
-	*(betype<uint32>*)(packet.data() + 2) = (address & 0xFFFFFF) << 8; // only uint24
+	packet[0] = (uint8)OutputReportId::WriteMemory;
+	*(betype<uint32>*)(packet.data() + 1) = address; // only uint24
 	*(packet.data() + 2 + 3) = (uint8)data.size();
 	std::copy(data.begin(), data.end(), packet.data() + 2 + 3 + 1);
 	send_packet(index, std::move(packet));
