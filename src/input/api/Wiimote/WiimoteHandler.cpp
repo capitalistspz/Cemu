@@ -174,7 +174,7 @@ void WiimoteHandler::EnableRumble(bool enable)
 void WiimoteHandler::SetLED(uint8 ledMask)
 {
 	WiimoteMsg::RequestLED req{
-		.flags = req.flags = ledMask << 4};
+		.flags = static_cast<uint8>(ledMask << 4)};
 	Send(req);
 }
 
