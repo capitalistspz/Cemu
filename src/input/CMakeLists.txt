@@ -72,6 +72,10 @@ if (ENABLE_WIIMOTE)
 			api/Wiimote/WiimoteDevice.h
 			api/Wiimote/hidapi/HidapiWiimote.cpp
 			api/Wiimote/hidapi/HidapiWiimote.h
+			api/Wiimote/WiimoteHandler.cpp
+			api/Wiimote/WiimoteHandler.h
+			api/Wiimote/WiimoteHIDMessages.h
+			api/Wiimote/WiimoteHIDReportIds.h
 	)
 endif ()
 
