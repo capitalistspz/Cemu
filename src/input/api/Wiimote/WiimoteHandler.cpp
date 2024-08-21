@@ -148,8 +148,8 @@ void WiimoteHandler::EnableIR(bool enable)
 	Send(ir1);
 
 	uint8 ir2[2] = {};
-	ir1[0] = static_cast<uint8>(RequestReportId::IR2);
-	ir1[1] = enable * 0x4;
+	ir2[0] = static_cast<uint8>(RequestReportId::IR2);
+	ir2[1] = enable * 0x4;
 	Send(ir2);
 
 	if (!enable)
@@ -159,10 +159,17 @@ void WiimoteHandler::EnableIR(bool enable)
 	RequestWrite(ADDR_REG_IR_SENS_BLOCK_1, irSensBlock1);
 	RequestWrite(ADDR_REG_IR_SENS_BLOCK_2, irSensBlock2);
 	if (m_state.extensionConnected)
+	{
 		RequestWriteByte(ADDR_REG_IR_MODE, 0x01);
+		RequestWriteByte(ADDR_REG_IR_ENABLE, 0x08);
+		SetReportMode(ResponseReportId::DataCoreAccIR10Ext6, true);
+	}
 	else
+	{
 		RequestWriteByte(ADDR_REG_IR_MODE, 0x03);
-	RequestWriteByte(ADDR_REG_IR_ENABLE, 0x08);
+		RequestWriteByte(ADDR_REG_IR_ENABLE, 0x08);
+		SetReportMode(ResponseReportId::DataCoreAccIR12, true);
+	}
 }
 
 void WiimoteHandler::EnableRumble(bool enable)
@@ -184,9 +191,9 @@ namespace
 	{
 		state.accelerationPrev = state.acceleration;
 		const glm::u16vec3 acc{
-			msg.acc.x << 2 | msg.core & 0b0110'0000'0000'0000 >> 13,
-			msg.acc.y << 2 | msg.core & 0b0000'0000'0010'0000 >> 5,
-			msg.acc.z << 2 | msg.core & 0b0000'0000'0100'0000 >> 6};
+			(msg.acc.x << 2) | ((msg.core & 0b0110'0000'0000'0000) >> 13),
+			(msg.acc.y << 2) | ((msg.core & 0b0000'0000'0010'0000) >> 5),
+			(msg.acc.z << 2) | ((msg.core & 0b0000'0000'0100'0000) >> 6)};
 
 		const auto& [zero, gravity] = state.calibration;
 		state.acceleration = (glm::vec3(acc) - zero) / (gravity - zero);
