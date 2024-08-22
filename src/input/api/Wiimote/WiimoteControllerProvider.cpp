@@ -13,12 +13,6 @@ WiimoteControllerProvider::WiimoteControllerProvider()
 	m_writer_thread = std::jthread(&WiimoteControllerProvider::writer_thread, this);
 }
 
-WiimoteControllerProvider::~WiimoteControllerProvider()
-{
-	m_writer_thread.request_stop();
-	m_reader_thread.request_stop();
-}
-
 std::vector<std::shared_ptr<ControllerBase>> WiimoteControllerProvider::get_controllers()
 {
 	std::scoped_lock lock(m_device_mutex);
@@ -172,14 +166,14 @@ void WiimoteControllerProvider::reader_thread(std::stop_token stopToken)
 
 				new_state.buttons = handlerState.buttons;
 				new_state.battery_level = handlerState.battery;
+				new_state.ir_camera.anyVisible = handlerState.ir.anyVisible;
+				new_state.ir_camera.position = handlerState.ir.position;
+				new_state.ir_camera.m_positionVisibility = handlerState.ir.positionVisibility;
+				new_state.ir_camera.position = handlerState.ir.position;
 
 				const auto handlerAcc = handlerState.acceleration;
 
-				constexpr static float piHalf = std::numbers::pi / 2;
-
-				new_state.m_roll = std::atan2(handlerAcc.z, handlerAcc.x) - piHalf;
-
-				float acc[3]{-handlerAcc.x, -handlerAcc.z, handlerAcc.y};
+				float acc[3]{-handlerAcc.x, -handlerAcc.z, +handlerAcc.y};
 				const auto accDiff = length(handlerAcc - handlerState.accelerationPrev);
 				float zero3[3]{};
 				float zero4[4]{};

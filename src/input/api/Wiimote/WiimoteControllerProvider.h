@@ -25,7 +25,7 @@ class WiimoteControllerProvider : public ControllerProviderBase, public WiimoteH
 	constexpr static uint32 kDefaultPacketDelay = 25;
 
 	WiimoteControllerProvider();
-	~WiimoteControllerProvider() override;
+	~WiimoteControllerProvider() override = default;
 
 	inline static InputAPI::Type kAPIType = InputAPI::Wiimote;
 	InputAPI::Type api() const override
@@ -49,8 +49,6 @@ class WiimoteControllerProvider : public ControllerProviderBase, public WiimoteH
 		uint8 flags = 0;
 		uint8 battery_level = 0;
 
-		float m_roll = 0;
-
 		MotionSample motion_sample{};
 		WiiUMotionHandler motion_handler{};
 
@@ -60,13 +58,10 @@ class WiimoteControllerProvider : public ControllerProviderBase, public WiimoteH
 		struct IRCamera
 		{
 			IRMode mode = kIRDisabled;
-			std::array<IRDot, 4> dots{}, prev_dots{};
-
+			bool anyVisible = false;
 			glm::vec2 position{}, m_prev_position{};
 			PositionVisibility m_positionVisibility;
-			glm::vec2 middle{};
 			float distance = 0;
-			std::pair<sint32, sint32> indices{0, 1};
 		} ir_camera{};
 
 		std::optional<MotionPlusData> m_motion_plus;

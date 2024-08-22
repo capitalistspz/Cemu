@@ -1,6 +1,7 @@
 #pragma once
 
 #include "WiimoteHIDReportIds.h"
+#include "input/api/ControllerState.h"
 
 template<typename T>
 concept MessageConcept = std::is_trivially_copyable_v<T>;
@@ -19,16 +20,37 @@ class WiimoteHandler {
 		glm::vec3 gravity{576, 576, 576};
 	};
 
+	struct IRDot
+	{
+		glm::vec2 pos;
+		uint8 size;
+		bool visible;
+	};
+
+	struct IR
+	{
+		bool anyVisible;
+		IRDot dots[4];
+		IRDot dotsPrev[4];
+		std::pair<unsigned,unsigned> indices;
+		glm::vec2 middle;
+		glm::vec2 position;
+		float distance;
+		PositionVisibility positionVisibility;
+	};
+
 	struct State
 	{
 		bool extensionConnected;
 		bool rumble;
-		bool ir;
+		bool irEnabled;
 		uint8 battery;
 		uint16 buttons;
 		glm::vec3 acceleration;
 		glm::vec3 accelerationPrev;
 		Calibration calibration;
+		IR ir;
+		float roll;
 	};
 
 	explicit WiimoteHandler(unsigned index, Queuer* queuer);

@@ -102,6 +102,24 @@ namespace Messages
 
 	static_assert(sizeof(CoreAcc::acc) == 3);
 
+	struct IRBasic
+	{
+		uint8 x1;
+		uint8 y1;
+		uint8 bits;
+		uint8 x2;
+		uint8 y2;
+	};
+	static_assert(sizeof(IRBasic) == 5);
+
+	struct IRExtended
+	{
+		uint8 x;
+		uint8 y;
+		uint8 bits;
+	};
+	static_assert(sizeof(IRExtended) == 3);
+
 } // namespace Messages
 
 struct Response
@@ -134,14 +152,14 @@ static void WiimoteHandlerLog(fmt::format_string<T...> format_string, T&&... t)
 WiimoteHandler::WiimoteHandler(unsigned index, Queuer* queuer)
 	: m_index(index), m_queueOwner(queuer), m_state()
 {
-	SetReportMode(ResponseReportId::DataCoreAcc, true);
+	EnableIR(true);
 }
 void WiimoteHandler::EnableIR(bool enable)
 {
 	constexpr static uint8 irSensBlock1[] = {0x02, 0x00, 0x00, 0x71, 0x01, 0x00, 0xaa, 0x00, 0x64};
 	constexpr static uint8 irSensBlock2[] = {0x63, 0x03};
 
-	m_state.ir = enable;
+	m_state.irEnabled = enable;
 	uint8 ir1[2] = {};
 	ir1[0] = static_cast<uint8>(RequestReportId::IR1);
 	ir1[1] = enable * 0x4;
@@ -189,6 +207,8 @@ namespace
 {
 	inline void HandleAcc(WiimoteHandler::State& state, const Messages::HasAcc auto& msg)
 	{
+		constexpr static float piHalf = std::numbers::pi / 2;
+
 		state.accelerationPrev = state.acceleration;
 		const glm::u16vec3 acc{
 			(msg.acc.x << 2) | ((msg.core & 0b0110'0000'0000'0000) >> 13),
@@ -197,12 +217,17 @@ namespace
 
 		const auto& [zero, gravity] = state.calibration;
 		state.acceleration = (glm::vec3(acc) - zero) / (gravity - zero);
+		state.roll = std::atan2(state.acceleration.z, state.acceleration.x) - piHalf;
 	}
 
 	inline void HandleButtons(WiimoteHandler::State& state, uint16 buttons)
 	{
 		constexpr static uint16 buttonMask = 0b1001'1111'0001'1111;
 		state.buttons = buttons & buttonMask;
+	}
+	constexpr float DegToRad(float angle)
+	{
+		return angle * (std::numbers::pi / 180);
 	}
 } // namespace
 
@@ -220,7 +245,7 @@ bool WiimoteHandler::Parse(std::span<const uint8> data)
 
 	Response response;
 	std::memcpy(&response, data.data(), size);
-	WiimoteHandlerLog("Report {:#02x} received", reportId);
+
 	switch (reportId)
 	{
 		using enum ResponseReportId;
@@ -334,11 +359,150 @@ void WiimoteHandler::ParseExtensionData(std::span<uint8_t> extensionData)
 	}
 	// TODO: Extension data parsing
 }
+
+void RotateIR(WiimoteHandler::IR ir, float angle)
+{
+	const float sin = std::sin(angle);
+	const float cos = std::cos(angle);
+	for (auto& dot : ir.dots)
+	{
+		if (!dot.visible)
+			continue;
+		dot.pos -= 0.5f;
+		dot.pos.x = (dot.pos.x * cos) + (dot.pos.y * -sin);
+		dot.pos.y = (dot.pos.x * sin) + (dot.pos.y * cos);
+		dot.pos += 0.5f;
+	}
+}
+
+
+
+void CalculateIRPos(WiimoteHandler::IR ir)
+{
+	auto indices = ir.indices;
+	if (ir.middle.x != 0)
+	{
+		const float last_angle = std::atan(ir.middle.y / ir.middle.x);
+		float best_distance = std::numeric_limits<float>::max();
+		for (size_t i = 0; i < std::size(ir.dots); ++i)
+		{
+			if (!ir.dots[i].visible)
+				continue;
+
+			for (size_t j = i + 1; j < std::size(ir.dots); ++j)
+			{
+				if (!ir.dots[j].visible)
+					continue;
+
+				const auto mid = (ir.dots[i].pos + ir.dots[j].pos) / 2.0f;
+				if (mid.x == 0)
+					continue;
+
+				// check if angle is close enough to the last known one
+				float angle = std::atan(mid.y / mid.x);
+				if (std::abs(last_angle - angle) > DegToRad(10.0f))
+					continue;
+
+				// check if distance between points is similar to last known distance
+				const float distance = std::abs(ir.distance - glm::length(ir.dots[i].pos - ir.dots[j].pos));
+				if (distance > 0.1f && distance > best_distance)
+					continue;
+
+				// found a new pair
+				best_distance = distance;
+				indices = {i, j};
+			}
+		}
+	}
+
+	if (ir.dots[indices.first].visible && ir.dots[indices.second].visible)
+	{
+		ir.dotsPrev[indices.first] = ir.dots[indices.first];
+		ir.dotsPrev[indices.second] = ir.dots[indices.second];
+		ir.position = (ir.dots[indices.first].pos + ir.dots[indices.second].pos) / 2.0f;
+
+		ir.middle = ir.position;
+		ir.distance = glm::length(ir.dots[indices.first].pos - ir.dots[indices.second].pos);
+		ir.indices = indices;
+		ir.positionVisibility = PositionVisibility::FULL;
+	}
+	else if (ir.dots[indices.first].visible)
+	{
+		ir.position = ir.middle + (ir.dots[indices.first].pos - ir.dotsPrev[indices.first].pos);
+		ir.positionVisibility = PositionVisibility::PARTIAL;
+	}
+	else if (ir.dots[indices.second].visible)
+	{
+		ir.position = ir.middle + (ir.dots[indices.second].pos - ir.dotsPrev[indices.second].pos);
+		ir.positionVisibility = PositionVisibility::PARTIAL;
+	}
+	else {
+		ir.positionVisibility = PositionVisibility::NONE;
+	}
+}
+
 void WiimoteHandler::ParseIRData(std::span<uint8_t> irData)
 {
+	constexpr static glm::u16vec2 invalidDot = {0x3ffu, 0x3ffu};
 	const auto size = irData.size();
 	cemu_assert_debug(size == 12 || size == 10);
-	// TODO: IR Data parsing
+
+	if (size == 10)
+	{
+		Messages::IRBasic irMsg[2];
+		std::memcpy(irMsg, irData.data(), sizeof(irMsg));
+
+		for (auto i = 0u; i < 2; ++i)
+		{
+			const auto data = irMsg[i];
+			glm::u16vec2 dot1{data.x1 | ((data.bits & 0b00110000) << 4),
+							  data.y1 | ((data.bits & 0b11000000) << 2)};
+			glm::u16vec2 dot2{data.x2 | ((data.bits & 0b00000011) << 8),
+							  data.y2 | ((data.bits & 0b00001100) << 6)};
+
+			auto& outDot1 = m_state.ir.dots[i * 2];
+			auto& outDot2 = m_state.ir.dots[i * 2 + 1];
+
+			outDot1.visible = dot1 != invalidDot;
+			outDot1.size = 0;
+			if (outDot1.visible)
+				outDot1.pos = glm::vec2(1.0f - (dot1.x / 1023.0f), dot1.y / 767.0f);
+			else
+				outDot1.pos = {};
+			m_state.ir.anyVisible |= outDot1.visible;
+
+			outDot2.visible = dot2 != invalidDot;
+			outDot2.size = 0;
+			if (outDot2.visible)
+				outDot2.pos = glm::vec2(1.0f - (dot2.x / 1023.0f), dot2.y / 767.0f);
+			else
+				outDot2.pos = {};
+			m_state.ir.anyVisible |= outDot2.visible;
+
+		}
+	}
+	else if (size == 12)
+	{
+		Messages::IRExtended irMsg[4];
+		std::memcpy(irMsg, irData.data(), sizeof(irMsg));
+		for (auto i = 0u; i < 4; ++i)
+		{
+			const auto data = irMsg[i];
+			auto& outDot = m_state.ir.dots[i];
+
+			glm::u16vec2 rawDot{
+				data.x | (data.bits & 0b00110000) << 4,
+				data.y | (data.bits & 0b11000000) << 2,
+			};
+			outDot.visible = rawDot != invalidDot;
+			m_state.ir.anyVisible |= outDot.visible;
+
+			outDot.size = data.bits & 0b00001111;
+		}
+	}
+	RotateIR(m_state.ir, m_state.roll);
+	CalculateIRPos(m_state.ir);
+
 }
 void WiimoteHandler::RequestStatus()
 {

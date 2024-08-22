@@ -83,8 +83,7 @@ bool NativeWiimoteController::is_mpls_attached() const
 bool NativeWiimoteController::has_position()
 {
 	const auto state = m_provider->get_state(m_index);
-	return std::any_of(state.ir_camera.dots.cbegin(), state.ir_camera.dots.cend(),
-	                   [](const IRDot& v) { return v.visible; });
+	return state.ir_camera.anyVisible;
 }
 
 glm::vec2 NativeWiimoteController::get_position()
