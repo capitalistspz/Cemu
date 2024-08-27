@@ -29,7 +29,6 @@ add_library(CemuUtil
   helpers/Semaphore.h
   helpers/Serializer.cpp
   helpers/Serializer.h
-  helpers/Singleton.h
   helpers/StringBuf.h
   helpers/StringHelpers.h
   helpers/StringParser.h

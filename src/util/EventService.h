@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/helpers/Singleton.h"
+#include "util/helpers/ClassWrapper.h"
 
 #include <boost/signals2.hpp>
 #include <boost/bind/placeholders.hpp>
@@ -12,9 +12,9 @@ enum class Events : int32_t
 
 using ControllerChangedFunc = void(void);
 
-class EventService : public Singleton<EventService>
+class EventService : public SingletonClass<EventService>
 {
-	friend class Singleton<EventService>;
+	friend class SingletonClass<EventService>;
 	EventService() = default;
 
 public:

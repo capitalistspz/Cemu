@@ -9,7 +9,7 @@
 #include "input/api/Wiimote/WiimoteControllerProvider.h"
 #endif
 
-#include "util/helpers/Singleton.h"
+#include "util/helpers/ClassWrapper.h"
 
 #include "input/api/SDL/SDLControllerProvider.h"
 #include "input/api/Keyboard/KeyboardControllerProvider.h"
@@ -22,9 +22,9 @@
 #include <atomic>
 #include <optional>
 
-class InputManager : public Singleton<InputManager>
+class InputManager : public SingletonClass<InputManager>
 {
-	friend class Singleton<InputManager>;
+	friend class SingletonClass<InputManager>;
 	InputManager();
 	~InputManager();
 

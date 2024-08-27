@@ -822,136 +822,136 @@ TextureDecoder* OpenGLRenderer::texture_chooseDecodedFormat(Latte::E_GX2SURFFMT 
 	{
 		if (format == Latte::E_GX2SURFFMT::R32_FLOAT)
 		{
-			return TextureDecoder_R32_FLOAT::getInstance();
+			return &TextureDecoder_R32_FLOAT::instance();
 		}
 		if (format == Latte::E_GX2SURFFMT::D24_S8_UNORM)
 		{
-			return TextureDecoder_D24_S8::getInstance();
+			return &TextureDecoder_D24_S8::instance();
 		}
 		else if (format == Latte::E_GX2SURFFMT::D24_S8_FLOAT)
 		{
-			return TextureDecoder_NullData64::getInstance();
+			return &TextureDecoder_NullData64::instance();
 		}
 		else if (format == Latte::E_GX2SURFFMT::D32_S8_FLOAT)
 		{
-			return TextureDecoder_D32_S8_UINT_X24::getInstance();
+			return &TextureDecoder_D32_S8_UINT_X24::instance();
 		}
 		else if (format == Latte::E_GX2SURFFMT::R32_FLOAT)
 		{
-			return TextureDecoder_R32_FLOAT::getInstance();
+			return &TextureDecoder_R32_FLOAT::instance();
 		}
 		else if (format == Latte::E_GX2SURFFMT::R16_UNORM)
 		{
-			return TextureDecoder_R16_FLOAT::getInstance();
+			return &TextureDecoder_R16_FLOAT::instance();
 		}
 		return nullptr;
 	}
 	if (format == Latte::E_GX2SURFFMT::R4_G4_UNORM)
-		texDecoder = TextureDecoder_R4_G4_UNORM_To_RGBA4::getInstance();
+		texDecoder = &TextureDecoder_R4_G4_UNORM_To_RGBA4::instance();
 	else if (format == Latte::E_GX2SURFFMT::R4_G4_B4_A4_UNORM)
-		texDecoder = TextureDecoder_R4_G4_B4_A4_UNORM::getInstance();
+		texDecoder = &TextureDecoder_R4_G4_B4_A4_UNORM::instance();
 	else if (format == Latte::E_GX2SURFFMT::R16_G16_B16_A16_FLOAT)
-		texDecoder = TextureDecoder_R16_G16_B16_A16_FLOAT::getInstance();
+		texDecoder = &TextureDecoder_R16_G16_B16_A16_FLOAT::instance();
 	else if (format == Latte::E_GX2SURFFMT::R16_G16_FLOAT)
-		texDecoder = TextureDecoder_R16_G16_FLOAT::getInstance();
+		texDecoder = &TextureDecoder_R16_G16_FLOAT::instance();
 	else if (format == Latte::E_GX2SURFFMT::R16_SNORM)
-		texDecoder = TextureDecoder_R16_SNORM::getInstance();
+		texDecoder = &TextureDecoder_R16_SNORM::instance();
 	else if (format == Latte::E_GX2SURFFMT::R16_FLOAT)
-		texDecoder = TextureDecoder_R16_FLOAT::getInstance();
+		texDecoder = &TextureDecoder_R16_FLOAT::instance();
 	else if (format == Latte::E_GX2SURFFMT::R32_FLOAT)
-		texDecoder = TextureDecoder_R32_FLOAT::getInstance();
+		texDecoder = &TextureDecoder_R32_FLOAT::instance();
 	else if (format == Latte::E_GX2SURFFMT::BC1_UNORM)
-		texDecoder = TextureDecoder_BC1::getInstance();
+		texDecoder = &TextureDecoder_BC1::instance();
 	else if (format == Latte::E_GX2SURFFMT::BC1_SRGB)
-		texDecoder = TextureDecoder_BC1::getInstance();
+		texDecoder = &TextureDecoder_BC1::instance();
 	else if (format == Latte::E_GX2SURFFMT::BC2_UNORM)
-		texDecoder = TextureDecoder_BC2_UNORM_uncompress::getInstance();
+		texDecoder = &TextureDecoder_BC2_UNORM_uncompress::instance();
 	else if (format == Latte::E_GX2SURFFMT::BC2_SRGB)
-		texDecoder = TextureDecoder_BC2_SRGB_uncompress::getInstance();
+		texDecoder = &TextureDecoder_BC2_SRGB_uncompress::instance();
 	else if (format == Latte::E_GX2SURFFMT::BC3_UNORM)
-		texDecoder = TextureDecoder_BC3::getInstance();
+		texDecoder = &TextureDecoder_BC3::instance();
 	else if (format == Latte::E_GX2SURFFMT::BC3_SRGB)
-		texDecoder = TextureDecoder_BC3::getInstance();
+		texDecoder = &TextureDecoder_BC3::instance();
 	else if (format == Latte::E_GX2SURFFMT::BC4_UNORM)
 	{
 		if (dim != Latte::E_DIM::DIM_2D && dim != Latte::E_DIM::DIM_2D_ARRAY)
-			texDecoder = TextureDecoder_BC4_UNORM_uncompress::getInstance();
+			texDecoder = &TextureDecoder_BC4_UNORM_uncompress::instance();
 		else
-			texDecoder = TextureDecoder_BC4::getInstance();
+			texDecoder = &TextureDecoder_BC4::instance();
 	}
 	else if (format == Latte::E_GX2SURFFMT::BC4_SNORM)
 	{
 		if (dim != Latte::E_DIM::DIM_2D && dim != Latte::E_DIM::DIM_2D_ARRAY)
-			texDecoder = TextureDecoder_BC4::getInstance();
+			texDecoder = &TextureDecoder_BC4::instance();
 		else
-			texDecoder = TextureDecoder_BC4_UNORM_uncompress::getInstance();
+			texDecoder = &TextureDecoder_BC4_UNORM_uncompress::instance();
 	}
 	else if (format == Latte::E_GX2SURFFMT::BC5_UNORM)
-		texDecoder = TextureDecoder_BC5::getInstance();
+		texDecoder = &TextureDecoder_BC5::instance();
 	else if (format == Latte::E_GX2SURFFMT::BC5_SNORM)
-		texDecoder = TextureDecoder_BC5::getInstance();
+		texDecoder = &TextureDecoder_BC5::instance();
 	else if (format == Latte::E_GX2SURFFMT::R8_G8_B8_A8_UNORM)
-		texDecoder = TextureDecoder_R8_G8_B8_A8::getInstance();
+		texDecoder = &TextureDecoder_R8_G8_B8_A8::instance();
 	else if (format == Latte::E_GX2SURFFMT::R8_G8_B8_A8_SNORM)
-		texDecoder = TextureDecoder_R8_G8_B8_A8::getInstance();
+		texDecoder = &TextureDecoder_R8_G8_B8_A8::instance();
 	else if (format == Latte::E_GX2SURFFMT::R8_G8_B8_A8_SRGB)
-		texDecoder = TextureDecoder_R8_G8_B8_A8::getInstance();
+		texDecoder = &TextureDecoder_R8_G8_B8_A8::instance();
 	else if (format == Latte::E_GX2SURFFMT::R8_UNORM)
-		texDecoder = TextureDecoder_R8::getInstance();
+		texDecoder = &TextureDecoder_R8::instance();
 	else if (format == Latte::E_GX2SURFFMT::R8_SNORM)
-		texDecoder = TextureDecoder_R8::getInstance();
+		texDecoder = &TextureDecoder_R8::instance();
 	else if (format == Latte::E_GX2SURFFMT::R8_G8_UNORM)
-		texDecoder = TextureDecoder_R8_G8::getInstance();
+		texDecoder = &TextureDecoder_R8_G8::instance();
 	else if (format == Latte::E_GX2SURFFMT::R8_G8_SNORM)
-		texDecoder = TextureDecoder_R8_G8::getInstance();
+		texDecoder = &TextureDecoder_R8_G8::instance();
 	else if (format == Latte::E_GX2SURFFMT::R16_UNORM)
-		texDecoder = TextureDecoder_R16_UNORM::getInstance();
+		texDecoder = &TextureDecoder_R16_UNORM::instance();
 	else if (format == Latte::E_GX2SURFFMT::R16_G16_B16_A16_UNORM)
-		texDecoder = TextureDecoder_R16_G16_B16_A16::getInstance();
+		texDecoder = &TextureDecoder_R16_G16_B16_A16::instance();
 	else if (format == Latte::E_GX2SURFFMT::R16_G16_B16_A16_SNORM)
-		texDecoder = TextureDecoder_R16_G16_B16_A16::getInstance();
+		texDecoder = &TextureDecoder_R16_G16_B16_A16::instance();
 	else if (format == Latte::E_GX2SURFFMT::R16_G16_UNORM)
-		texDecoder = TextureDecoder_R16_G16::getInstance();
+		texDecoder = &TextureDecoder_R16_G16::instance();
 	else if (format == Latte::E_GX2SURFFMT::R5_G6_B5_UNORM)
-		texDecoder = TextureDecoder_R5_G6_B5::getInstance();
+		texDecoder = &TextureDecoder_R5_G6_B5::instance();
 	else if (format == Latte::E_GX2SURFFMT::R5_G5_B5_A1_UNORM)
-		texDecoder = TextureDecoder_R5_G5_B5_A1_UNORM_swappedOpenGL::getInstance();
+		texDecoder = &TextureDecoder_R5_G5_B5_A1_UNORM_swappedOpenGL::instance();
 	else if (format == Latte::E_GX2SURFFMT::A1_B5_G5_R5_UNORM)
-		texDecoder = TextureDecoder_A1_B5_G5_R5_UNORM::getInstance();
+		texDecoder = &TextureDecoder_A1_B5_G5_R5_UNORM::instance();
 	else if (format == Latte::E_GX2SURFFMT::R32_G32_FLOAT)
-		texDecoder = TextureDecoder_R32_G32_FLOAT::getInstance();
+		texDecoder = &TextureDecoder_R32_G32_FLOAT::instance();
 	else if (format == Latte::E_GX2SURFFMT::R32_G32_UINT)
-		texDecoder = TextureDecoder_R32_G32_UINT::getInstance();
+		texDecoder = &TextureDecoder_R32_G32_UINT::instance();
 	else if (format == Latte::E_GX2SURFFMT::R32_UINT)
-		texDecoder = TextureDecoder_R32_UINT::getInstance();
+		texDecoder = &TextureDecoder_R32_UINT::instance();
 	else if (format == Latte::E_GX2SURFFMT::R16_UINT)
-		texDecoder = TextureDecoder_R16_UINT::getInstance();
+		texDecoder = &TextureDecoder_R16_UINT::instance();
 	else if (format == Latte::E_GX2SURFFMT::R8_UINT)
-		texDecoder = TextureDecoder_R8_UINT::getInstance();
+		texDecoder = &TextureDecoder_R8_UINT::instance();
 	else if (format == Latte::E_GX2SURFFMT::R32_G32_B32_A32_FLOAT)
-		texDecoder = TextureDecoder_R32_G32_B32_A32_FLOAT::getInstance();
+		texDecoder = &TextureDecoder_R32_G32_B32_A32_FLOAT::instance();
 	else if (format == Latte::E_GX2SURFFMT::R10_G10_B10_A2_UNORM)
-		texDecoder = TextureDecoder_R10_G10_B10_A2_UNORM::getInstance();
+		texDecoder = &TextureDecoder_R10_G10_B10_A2_UNORM::instance();
 	else if (format == Latte::E_GX2SURFFMT::A2_B10_G10_R10_UNORM)
-		texDecoder = TextureDecoder_A2_B10_G10_R10_UNORM_To_RGBA16::getInstance();
+		texDecoder = &TextureDecoder_A2_B10_G10_R10_UNORM_To_RGBA16::instance();
 	else if (format == Latte::E_GX2SURFFMT::R10_G10_B10_A2_SNORM)
-		texDecoder = TextureDecoder_R10_G10_B10_A2_SNORM_To_RGBA16::getInstance();
+		texDecoder = &TextureDecoder_R10_G10_B10_A2_SNORM_To_RGBA16::instance();
 	else if (format == Latte::E_GX2SURFFMT::R10_G10_B10_A2_SRGB)
-		texDecoder = TextureDecoder_R10_G10_B10_A2_UNORM::getInstance();
+		texDecoder = &TextureDecoder_R10_G10_B10_A2_UNORM::instance();
 	else if (format == Latte::E_GX2SURFFMT::R11_G11_B10_FLOAT)
-		texDecoder = TextureDecoder_R11_G11_B10_FLOAT::getInstance();
+		texDecoder = &TextureDecoder_R11_G11_B10_FLOAT::instance();
 	else if (format == Latte::E_GX2SURFFMT::R32_G32_B32_A32_UINT)
-		texDecoder = TextureDecoder_R32_G32_B32_A32_UINT::getInstance();
+		texDecoder = &TextureDecoder_R32_G32_B32_A32_UINT::instance();
 	else if (format == Latte::E_GX2SURFFMT::R16_G16_B16_A16_UINT)
-		texDecoder = TextureDecoder_R16_G16_B16_A16_UINT::getInstance();
+		texDecoder = &TextureDecoder_R16_G16_B16_A16_UINT::instance();
 	else if (format == Latte::E_GX2SURFFMT::R8_G8_B8_A8_UINT)
-		texDecoder = TextureDecoder_R8_G8_B8_A8_UINT::getInstance();
+		texDecoder = &TextureDecoder_R8_G8_B8_A8_UINT::instance();
 	else if (format == Latte::E_GX2SURFFMT::R24_X8_UNORM)
-		texDecoder = TextureDecoder_R24_X8::getInstance();
+		texDecoder = &TextureDecoder_R24_X8::instance();
 	else if (format == Latte::E_GX2SURFFMT::X24_G8_UINT)
-		texDecoder = TextureDecoder_X24_G8_UINT::getInstance();
+		texDecoder = &TextureDecoder_X24_G8_UINT::instance();
 	else if (format == Latte::E_GX2SURFFMT::D32_S8_FLOAT)
-		texDecoder = TextureDecoder_D32_S8_UINT_X24::getInstance();
+		texDecoder = &TextureDecoder_D32_S8_UINT_X24::instance();
 	else
 		cemu_assert_debug(false);
 

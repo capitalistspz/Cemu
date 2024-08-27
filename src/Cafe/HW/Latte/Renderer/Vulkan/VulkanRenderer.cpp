@@ -2158,35 +2158,35 @@ void VulkanRenderer::GetTextureFormatInfoVK(Latte::E_GX2SURFFMT format, bool isD
 			{
 				formatInfoOut->vkImageFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 				formatInfoOut->vkImageAspect = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-				formatInfoOut->decoder = TextureDecoder_NullData64::getInstance();
+				formatInfoOut->decoder = &TextureDecoder_NullData64::instance();
 			}
 			else
 			{
 				formatInfoOut->vkImageFormat = VK_FORMAT_D24_UNORM_S8_UINT;
 				formatInfoOut->vkImageAspect = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-				formatInfoOut->decoder = TextureDecoder_D24_S8::getInstance();
+				formatInfoOut->decoder = &TextureDecoder_D24_S8::instance();
 			}
 			break;
 		case Latte::E_GX2SURFFMT::D24_S8_FLOAT:
 			// alternative format
 			formatInfoOut->vkImageFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 			formatInfoOut->vkImageAspect = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-			formatInfoOut->decoder = TextureDecoder_NullData64::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_NullData64::instance();
 			break;
 		case Latte::E_GX2SURFFMT::D32_FLOAT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_D32_SFLOAT;
 			formatInfoOut->vkImageAspect = VK_IMAGE_ASPECT_DEPTH_BIT;
-			formatInfoOut->decoder = TextureDecoder_R32_FLOAT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R32_FLOAT::instance();
 			break;
 		case Latte::E_GX2SURFFMT::D16_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_D16_UNORM;
 			formatInfoOut->vkImageAspect = VK_IMAGE_ASPECT_DEPTH_BIT;
-			formatInfoOut->decoder = TextureDecoder_R16_UNORM::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R16_UNORM::instance();
 			break;
 		case Latte::E_GX2SURFFMT::D32_S8_FLOAT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
 			formatInfoOut->vkImageAspect = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-			formatInfoOut->decoder = TextureDecoder_D32_S8_UINT_X24::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_D32_S8_UINT_X24::instance();
 			break;
 		default:
 			cemuLog_log(LogType::Force, "Unsupported depth texture format {:04x}", (uint32)format);
@@ -2207,246 +2207,246 @@ void VulkanRenderer::GetTextureFormatInfoVK(Latte::E_GX2SURFFMT format, bool isD
 			// RGBA formats
 		case Latte::E_GX2SURFFMT::R32_G32_B32_A32_FLOAT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
-			formatInfoOut->decoder = TextureDecoder_R32_G32_B32_A32_FLOAT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R32_G32_B32_A32_FLOAT::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R32_G32_B32_A32_UINT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R32G32B32A32_UINT;
-			formatInfoOut->decoder = TextureDecoder_R32_G32_B32_A32_UINT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R32_G32_B32_A32_UINT::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R16_G16_B16_A16_FLOAT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
-			formatInfoOut->decoder = TextureDecoder_R16_G16_B16_A16_FLOAT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R16_G16_B16_A16_FLOAT::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R16_G16_B16_A16_UINT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R16G16B16A16_UINT;
-			formatInfoOut->decoder = TextureDecoder_R16_G16_B16_A16_UINT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R16_G16_B16_A16_UINT::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R16_G16_B16_A16_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R16G16B16A16_UNORM;
-			formatInfoOut->decoder = TextureDecoder_R16_G16_B16_A16::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R16_G16_B16_A16::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R16_G16_B16_A16_SNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R16G16B16A16_SNORM;
-			formatInfoOut->decoder = TextureDecoder_R16_G16_B16_A16::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R16_G16_B16_A16::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R8_G8_B8_A8_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_UNORM;
-			formatInfoOut->decoder = TextureDecoder_R8_G8_B8_A8::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R8_G8_B8_A8::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R8_G8_B8_A8_SNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_SNORM;
-			formatInfoOut->decoder = TextureDecoder_R8_G8_B8_A8::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R8_G8_B8_A8::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R8_G8_B8_A8_SRGB:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-			formatInfoOut->decoder = TextureDecoder_R8_G8_B8_A8::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R8_G8_B8_A8::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R8_G8_B8_A8_UINT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_UINT;
-			formatInfoOut->decoder = TextureDecoder_R8_G8_B8_A8::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R8_G8_B8_A8::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R8_G8_B8_A8_SINT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_SINT;
-			formatInfoOut->decoder = TextureDecoder_R8_G8_B8_A8::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R8_G8_B8_A8::instance();
 			break;
 			// RG formats
 		case Latte::E_GX2SURFFMT::R32_G32_FLOAT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R32G32_SFLOAT;
-			formatInfoOut->decoder = TextureDecoder_R32_G32_FLOAT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R32_G32_FLOAT::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R32_G32_UINT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R32G32_UINT;
-			formatInfoOut->decoder = TextureDecoder_R32_G32_UINT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R32_G32_UINT::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R16_G16_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R16G16_UNORM;
-			formatInfoOut->decoder = TextureDecoder_R16_G16::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R16_G16::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R16_G16_FLOAT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R16G16_SFLOAT;
-			formatInfoOut->decoder = TextureDecoder_R16_G16_FLOAT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R16_G16_FLOAT::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R8_G8_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R8G8_UNORM;
-			formatInfoOut->decoder = TextureDecoder_R8_G8::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R8_G8::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R8_G8_SNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R8G8_SNORM;
-			formatInfoOut->decoder = TextureDecoder_R8_G8::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R8_G8::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R4_G4_UNORM:
 			if (m_supportedFormatInfo.fmt_r4g4_unorm_pack == false)
 			{
 				if (m_supportedFormatInfo.fmt_r4g4b4a4_unorm_pack == false) {
 					formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_UNORM;
-					formatInfoOut->decoder = TextureDecoder_R4G4_UNORM_To_RGBA8::getInstance();
+					formatInfoOut->decoder = &TextureDecoder_R4G4_UNORM_To_RGBA8::instance();
 				}
 				else {
 					formatInfoOut->vkImageFormat = VK_FORMAT_R4G4B4A4_UNORM_PACK16;
-					formatInfoOut->decoder = TextureDecoder_R4_G4_UNORM_To_RGBA4_vk::getInstance();
+					formatInfoOut->decoder = &TextureDecoder_R4_G4_UNORM_To_RGBA4_vk::instance();
 				}
 			}
 			else
 			{
 				formatInfoOut->vkImageFormat = VK_FORMAT_R4G4_UNORM_PACK8;
-				formatInfoOut->decoder = TextureDecoder_R4_G4::getInstance();
+				formatInfoOut->decoder = &TextureDecoder_R4_G4::instance();
 			}
 			break;
 			// R formats
 		case Latte::E_GX2SURFFMT::R32_FLOAT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R32_SFLOAT;
-			formatInfoOut->decoder = TextureDecoder_R32_FLOAT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R32_FLOAT::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R32_UINT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R32_UINT;
-			formatInfoOut->decoder = TextureDecoder_R32_UINT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R32_UINT::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R16_FLOAT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R16_SFLOAT;
-			formatInfoOut->decoder = TextureDecoder_R16_FLOAT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R16_FLOAT::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R16_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R16_UNORM;
-			formatInfoOut->decoder = TextureDecoder_R16_UNORM::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R16_UNORM::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R16_SNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R16_SNORM;
-			formatInfoOut->decoder = TextureDecoder_R16_SNORM::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R16_SNORM::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R16_UINT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R16_UINT;
-			formatInfoOut->decoder = TextureDecoder_R16_UINT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R16_UINT::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R8_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R8_UNORM;
-			formatInfoOut->decoder = TextureDecoder_R8::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R8::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R8_SNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R8_SNORM;
-			formatInfoOut->decoder = TextureDecoder_R8::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R8::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R8_UINT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R8_UINT;
-			formatInfoOut->decoder = TextureDecoder_R8_UINT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R8_UINT::instance();
 			break;
 			// special formats
 		case Latte::E_GX2SURFFMT::R5_G6_B5_UNORM:
 			if (m_supportedFormatInfo.fmt_r5g6b5_unorm_pack == false) {
 				formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_UNORM;
-				formatInfoOut->decoder = TextureDecoder_R5G6B5_UNORM_To_RGBA8::getInstance();
+				formatInfoOut->decoder = &TextureDecoder_R5G6B5_UNORM_To_RGBA8::instance();
 			}
 			else {
 				// Vulkan has R in MSB, GPU7 has it in LSB
 				formatInfoOut->vkImageFormat = VK_FORMAT_R5G6B5_UNORM_PACK16;
-				formatInfoOut->decoder = TextureDecoder_R5_G6_B5_swappedRB::getInstance();
+				formatInfoOut->decoder = &TextureDecoder_R5_G6_B5_swappedRB::instance();
 			}
 			break;
 		case Latte::E_GX2SURFFMT::R5_G5_B5_A1_UNORM:
 			if (m_supportedFormatInfo.fmt_a1r5g5b5_unorm_pack == false) {
 				formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_UNORM;
-				formatInfoOut->decoder = TextureDecoder_R5_G5_B5_A1_UNORM_swappedRB_To_RGBA8::getInstance();
+				formatInfoOut->decoder = &TextureDecoder_R5_G5_B5_A1_UNORM_swappedRB_To_RGBA8::instance();
 			}
 			else {
 				// used in Super Mario 3D World for the hidden Luigi sprites
 				// since order of channels is reversed in Vulkan compared to GX2 the format we need is A1B5G5R5
 				formatInfoOut->vkImageFormat = VK_FORMAT_A1R5G5B5_UNORM_PACK16;
-				formatInfoOut->decoder = TextureDecoder_R5_G5_B5_A1_UNORM_swappedRB::getInstance();
+				formatInfoOut->decoder = &TextureDecoder_R5_G5_B5_A1_UNORM_swappedRB::instance();
 			}
 			break;
 		case Latte::E_GX2SURFFMT::A1_B5_G5_R5_UNORM:
 			if (m_supportedFormatInfo.fmt_a1r5g5b5_unorm_pack == false) {
 				formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_UNORM;
-				formatInfoOut->decoder = TextureDecoder_A1_B5_G5_R5_UNORM_vulkan_To_RGBA8::getInstance();
+				formatInfoOut->decoder = &TextureDecoder_A1_B5_G5_R5_UNORM_vulkan_To_RGBA8::instance();
 			}
 			else {
 				// used by VC64 (e.g. Ocarina of Time)
 				formatInfoOut->vkImageFormat = VK_FORMAT_A1R5G5B5_UNORM_PACK16; // A 15 R 10..14, G 5..9 B 0..4
-				formatInfoOut->decoder = TextureDecoder_A1_B5_G5_R5_UNORM_vulkan::getInstance();
+				formatInfoOut->decoder = &TextureDecoder_A1_B5_G5_R5_UNORM_vulkan::instance();
 			}
 			break;
 		case Latte::E_GX2SURFFMT::R11_G11_B10_FLOAT:
 			formatInfoOut->vkImageFormat = VK_FORMAT_B10G11R11_UFLOAT_PACK32; // verify if order of channels is still the same as GX2
-			formatInfoOut->decoder = TextureDecoder_R11_G11_B10_FLOAT::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R11_G11_B10_FLOAT::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R4_G4_B4_A4_UNORM:
 			if (m_supportedFormatInfo.fmt_r4g4b4a4_unorm_pack == false) {
 				formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_UNORM;
-				formatInfoOut->decoder = TextureDecoder_R4G4B4A4_UNORM_To_RGBA8::getInstance();
+				formatInfoOut->decoder = &TextureDecoder_R4G4B4A4_UNORM_To_RGBA8::instance();
 			}
 			else {
 				formatInfoOut->vkImageFormat = VK_FORMAT_R4G4B4A4_UNORM_PACK16;
- 				formatInfoOut->decoder = TextureDecoder_R4_G4_B4_A4_UNORM::getInstance();
+ 				formatInfoOut->decoder = &TextureDecoder_R4_G4_B4_A4_UNORM::instance();
 			}
 			break;
 			// special formats - R10G10B10_A2
 		case Latte::E_GX2SURFFMT::R10_G10_B10_A2_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_A2B10G10R10_UNORM_PACK32; // todo - verify
-			formatInfoOut->decoder = TextureDecoder_R10_G10_B10_A2_UNORM::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R10_G10_B10_A2_UNORM::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R10_G10_B10_A2_SNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R16G16B16A16_SNORM; // Vulkan has VK_FORMAT_A2R10G10B10_SNORM_PACK32 but it doesnt work?
-			formatInfoOut->decoder = TextureDecoder_R10_G10_B10_A2_SNORM_To_RGBA16::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R10_G10_B10_A2_SNORM_To_RGBA16::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R10_G10_B10_A2_SRGB:
 			//formatInfoOut->vkImageFormat = VK_FORMAT_R16G16B16A16_SNORM; // Vulkan has no uncompressed SRGB format with more than 8 bits per channel
-			//formatInfoOut->decoder = TextureDecoder_R10_G10_B10_A2_SNORM_To_RGBA16::getInstance();
+			//formatInfoOut->decoder = &TextureDecoder_R10_G10_B10_A2_SNORM_To_RGBA16::getInstance();
 			//break;
 			formatInfoOut->vkImageFormat = VK_FORMAT_A2B10G10R10_UNORM_PACK32; // todo - verify
-			formatInfoOut->decoder = TextureDecoder_R10_G10_B10_A2_UNORM::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R10_G10_B10_A2_UNORM::instance();
 			break;
 			// compressed formats
 		case Latte::E_GX2SURFFMT::BC1_SRGB:
 			formatInfoOut->vkImageFormat = VK_FORMAT_BC1_RGBA_SRGB_BLOCK; // todo - verify
-			formatInfoOut->decoder = TextureDecoder_BC1::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_BC1::instance();
 			break;
 		case Latte::E_GX2SURFFMT::BC1_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_BC1_RGBA_UNORM_BLOCK; // todo - verify
-			formatInfoOut->decoder = TextureDecoder_BC1::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_BC1::instance();
 			break;
 		case Latte::E_GX2SURFFMT::BC2_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_BC2_UNORM_BLOCK; // todo - verify
-			formatInfoOut->decoder = TextureDecoder_BC2::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_BC2::instance();
 			break;
 		case Latte::E_GX2SURFFMT::BC2_SRGB:
 			formatInfoOut->vkImageFormat = VK_FORMAT_BC2_SRGB_BLOCK; // todo - verify
-			formatInfoOut->decoder = TextureDecoder_BC2::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_BC2::instance();
 			break;
 		case Latte::E_GX2SURFFMT::BC3_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_BC3_UNORM_BLOCK;
-			formatInfoOut->decoder = TextureDecoder_BC3::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_BC3::instance();
 			break;
 		case Latte::E_GX2SURFFMT::BC3_SRGB:
 			formatInfoOut->vkImageFormat = VK_FORMAT_BC3_SRGB_BLOCK;
-			formatInfoOut->decoder = TextureDecoder_BC3::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_BC3::instance();
 			break;
 		case Latte::E_GX2SURFFMT::BC4_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_BC4_UNORM_BLOCK;
-			formatInfoOut->decoder = TextureDecoder_BC4::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_BC4::instance();
 			break;
 		case Latte::E_GX2SURFFMT::BC4_SNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_BC4_SNORM_BLOCK;
-			formatInfoOut->decoder = TextureDecoder_BC4::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_BC4::instance();
 			break;
 		case Latte::E_GX2SURFFMT::BC5_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_BC5_UNORM_BLOCK;
-			formatInfoOut->decoder = TextureDecoder_BC5::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_BC5::instance();
 			break;
 		case Latte::E_GX2SURFFMT::BC5_SNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_BC5_SNORM_BLOCK;
-			formatInfoOut->decoder = TextureDecoder_BC5::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_BC5::instance();
 			break;
 		case Latte::E_GX2SURFFMT::R24_X8_UNORM:
 			formatInfoOut->vkImageFormat = VK_FORMAT_R32_SFLOAT;
-			formatInfoOut->decoder = TextureDecoder_R24_X8::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_R24_X8::instance();
 			break;
 		case Latte::E_GX2SURFFMT::X24_G8_UINT:
 			// used by Color Splash and Resident Evil
 			formatInfoOut->vkImageFormat = VK_FORMAT_R8G8B8A8_UINT; // todo - should we use ABGR format?
-			formatInfoOut->decoder = TextureDecoder_X24_G8_UINT::getInstance(); // todo - verify
+			formatInfoOut->decoder = &TextureDecoder_X24_G8_UINT::instance(); // todo - verify
 		case Latte::E_GX2SURFFMT::R32_X8_FLOAT:
 			// seen in Disney Infinity 3.0
 			formatInfoOut->vkImageFormat = VK_FORMAT_R32_SFLOAT;
-			formatInfoOut->decoder = TextureDecoder_NullData64::getInstance();
+			formatInfoOut->decoder = &TextureDecoder_NullData64::instance();
 			break;
 		default:
 			cemuLog_log(LogType::Force, "Unsupported color texture format {:04x}", (uint32)format);

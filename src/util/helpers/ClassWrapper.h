@@ -7,10 +7,10 @@ template<typename T>
 class SingletonClass
 {
 public:
-	static T* getInstance()
+	static T& instance()
 	{
 		static T instance;
-		return &instance;
+		return instance;
 	}
 
 protected:
