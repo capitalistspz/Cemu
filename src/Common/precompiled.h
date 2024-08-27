@@ -253,7 +253,7 @@ inline uint64 _udiv128(uint64 highDividend, uint64 lowDividend, uint64 divisor, 
     #define DEBUG_BREAK __debugbreak()
 #else
     #include <csignal>
-    #define DEBUG_BREAK raise(SIGTRAP) 
+    #define DEBUG_BREAK raise(SIGTRAP)
 #endif
 
 #if defined(_MSC_VER)
@@ -291,7 +291,7 @@ inline uint64 __rdtsc()
 
 inline void _mm_mfence()
 {
-    
+
 }
 
 inline unsigned char _addcarry_u64(unsigned char carry, unsigned long long a, unsigned long long b, unsigned long long *result)
@@ -394,16 +394,10 @@ void vectorRemoveByIndex(std::vector<T>& vec, const size_t index)
     vec.erase(vec.begin() + index);
 }
 
-template<typename T1, typename T2>
-int match_any_of(T1 value, T2 compareTo)
+template<typename T1, typename... Types>
+bool match_any_of(T1 value, Types&&... others)
 {
-    return value == compareTo;
-}
-
-template<typename T1, typename T2, typename... Types>
-bool match_any_of(T1 value, T2 compareTo, Types&&... others)
-{
-    return value == compareTo || match_any_of(value, others...);
+    return ((value == others) || ...);
 }
 
 // we cache the frequency in a static variable
@@ -501,21 +495,14 @@ bool future_is_ready(std::future<T>& f)
 #endif
 }
 
-// replace with std::scope_exit once available
-struct scope_exit
-{
-	std::function<void()> f_;
-	explicit scope_exit(std::function<void()> f) noexcept : f_(std::move(f)) {}
-	~scope_exit() { if (f_) f_(); }
-};
+// helper function to make std::atomic_ref from a raw ptr
+// this is technically only legal if alignment restrictions are met
 
-// helper function to cast raw pointers to std::atomic
-// this is technically not legal but works on most platforms as long as alignment restrictions are met and the implementation of atomic doesnt come with additional members
-
-template<typename T>
-std::atomic<T>* _rawPtrToAtomic(T* ptr)
+template <typename T>
+std::atomic_ref<T> rawPtrToAtomicRef(T* ptr)
 {
-    return reinterpret_cast<std::atomic<T>*>(ptr);
+	cemu_assert_debug((reinterpret_cast<std::uintptr_t>(ptr) % std::atomic_ref<T>::required_alignment) == 0);
+	return std::atomic_ref<T>(*ptr);
 }
 
 #if defined(__GNUC__)
@@ -578,13 +565,29 @@ struct fmt::formatter<betype<T>> : fmt::formatter<T>
 	}
 };
 
-// useful C++23 stuff that isn't yet widely supported
-
-// std::to_underlying
+// Future and unsupported C++ standard/TS stuff
 namespace stdx
 {
+	// std::to_underlying
     template <typename EnumT, typename = std::enable_if_t < std::is_enum<EnumT>{} >>
         constexpr std::underlying_type_t<EnumT> to_underlying(EnumT e) noexcept {
         return static_cast<std::underlying_type_t<EnumT>>(e);
     };
+
+	// std::scope_exit
+	template <typename Fn>
+	class scope_exit
+	{
+		Fn m_fn;
+		bool m_active = true;
+		public:
+		constexpr explicit scope_exit(Fn&& fn) noexcept : m_fn(std::move(fn)) {}
+		constexpr scope_exit(scope_exit&& other) noexcept
+			: m_fn(std::move(other.m_fn)), m_active(std::exchange(other.m_active, false)) {}
+		constexpr scope_exit(const scope_exit&) = delete;
+
+		constexpr ~scope_exit(){ if (m_active) m_fn();}
+		constexpr void release() noexcept { m_active = false;}
+	};
+
 }

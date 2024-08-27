@@ -43,14 +43,9 @@ public:
         }
 	}
 
-	constexpr MEMPTR(const MEMPTR& memptr)
-		: m_value(memptr.m_value) { }
+	constexpr MEMPTR(const MEMPTR& memptr) = default;
 
-	constexpr MEMPTR& operator=(const MEMPTR& memptr)
-	{
-		m_value = memptr.m_value;
-		return *this;
-	}
+	constexpr MEMPTR& operator=(const MEMPTR& memptr) = default;
 
 	constexpr MEMPTR& operator=(const uint32& offset)
 	{
@@ -138,6 +133,8 @@ private:
 };
 
 static_assert(sizeof(MEMPTR<void*>) == sizeof(uint32be));
+static_assert(std::is_trivially_copy_constructible_v<MEMPTR<void*>>);
+static_assert(std::is_trivially_copyable_v<MEMPTR<void*>>);
 
 #include "StackAllocator.h"
 #include "SysAllocator.h"
