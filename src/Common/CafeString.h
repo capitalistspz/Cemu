@@ -25,7 +25,7 @@ class CafeString // fixed buffer size, null-terminated, PPC char
 		return data;
 	}
 
-	uint8be data[N];
+	char data[N];
 };
 
 template <size_t N>
