@@ -193,7 +193,7 @@ private:
 	std::unordered_map<uint64, struct FSTCachedHashedBlock*> m_cacheDecryptedHashedBlocks;
 	uint64 m_cacheAccessCounter{};
 
-	void DetermineUnhashedBlockIV(uint32 clusterIndex, uint32 blockIndex, uint8 ivOut[16]);
+	void DetermineUnhashedBlockIV(uint32 clusterIndex, uint32 blockIndex, uint8 (&ivOut)[16]);
 
 	struct FSTCachedRawBlock* GetDecryptedRawBlock(uint32 clusterIndex, uint32 blockIndex);
 	struct FSTCachedHashedBlock* GetDecryptedHashedBlock(uint32 clusterIndex, uint32 blockIndex);
