@@ -20,9 +20,9 @@ class CafeString // fixed buffer size, null-terminated, PPC char
 		return true;
 	}
 
-	const char* c_str()
+	const char* c_str() const
 	{
-		return (const char*)data;
+		return data;
 	}
 
 	uint8be data[N];
