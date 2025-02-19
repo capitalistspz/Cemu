@@ -22,7 +22,7 @@ constexpr T bswap(T i)
 template <typename T>
 constexpr T SwapEndian(T value)
 {
-	if constexpr (std::is_integral<T>::value)
+	if constexpr (std::is_integral_v<T>)
 	{
 #ifdef _MSC_VER
 		if constexpr (sizeof(T) == sizeof(uint32_t))
@@ -33,39 +33,35 @@ constexpr T SwapEndian(T value)
 
 		return (T)bswap((std::make_unsigned_t<T>)value);
 	}
-	else if constexpr (std::is_floating_point<T>::value)
+	else if constexpr (std::is_floating_point_v<T>)
 	{
 		if constexpr (sizeof(T) == sizeof(uint32_t))
 		{
-			const auto tmp = bswap<uint32_t>(*(uint32_t*)&value);
-			return *(T*)&tmp;
+			const auto tmp = bswap(std::bit_cast<uint32_t>(value));
+			return std::bit_cast<float>(tmp);
 		}
 		if constexpr (sizeof(T) == sizeof(uint64_t))
 		{
-			const auto tmp = bswap<uint64_t>(*(uint64_t*)&value);
-			return *(T*)&tmp;
+			const auto tmp = bswap(std::bit_cast<uint64_t>(value));
+			return std::bit_cast<double>(tmp);
 		}
 	}
-	else if constexpr (std::is_enum<T>::value)
+	else if constexpr (std::is_enum_v<T>)
 	{
 		return (T)SwapEndian((std::underlying_type_t<T>)value);
 	}
-	else if constexpr (std::is_base_of<Latte::LATTEREG, T>::value)
+	else if constexpr (std::is_base_of_v<Latte::LATTEREG, T>)
 	{
-		const auto tmp = bswap<uint32_t>(*(uint32_t*)&value);
-		return *(T*)&tmp;
+		const auto tmp = bswap<uint32_t>(std::bit_cast<uint32_t>(value));
+		return std::bit_cast<T>(tmp);
 	}
     else
     {
-        static_assert(std::is_integral<T>::value, "unsupported betype specialization!");
+        static_assert(std::is_integral_v<T>, "unsupported betype specialization!");
     }
 
 	return value;
 }
-
-#ifndef WIN32
-//static_assert(false, "_BE and _LE need to be adjusted");
-#endif
 
 // swap if native isn't big endian
 template <typename T>
@@ -88,19 +84,18 @@ public:
 	constexpr betype() = default;
 
 	// copy
-	constexpr betype(T value)
+	constexpr explicit(false) betype(T value)
 		: m_value(SwapEndian(value)) {}
 
-	constexpr betype(const betype& value) = default; // required for trivially_copyable
-	//constexpr betype(const betype& value)
-	//	: m_value(value.m_value) {}
+	// required for trivially_copyable
+	constexpr betype(const betype& value) = default;
 
 	template <typename U>
-	constexpr betype(const betype<U>& value)
-		: betype((T)value.value()) {}
+	constexpr explicit(false) betype(const betype<U>& value)
+		: betype(static_cast<T>(value.value())) {}
 
 	// assigns
-	static betype from_bevalue(T value)
+	constexpr static betype from_bevalue(T value)
 	{
 		betype result;
 		result.m_value = value;
@@ -108,101 +103,87 @@ public:
 	}
 
 	// returns LE value
-	constexpr T value() const { return SwapEndian<T>(m_value); }
+	[[nodiscard]] constexpr T value() const { return SwapEndian<T>(m_value); }
 
 	// returns BE value
-	constexpr T bevalue() const { return m_value; }
+	[[nodiscard]] constexpr T bevalue() const { return m_value; }
 
 	constexpr operator T() const { return value(); }
 
-	betype<T>& operator+=(const betype<T>& v)
+	constexpr betype& operator+=(const betype<T>& v)
 	{
 		m_value = SwapEndian(T(value() + v.value()));
 		return *this;
 	}
 
-	betype<T>& operator+=(const T& v) requires std::integral<T>
+	constexpr betype& operator+=(const T& v) requires std::integral<T>
 	{
 		m_value = SwapEndian(T(value() + v));
 		return *this;
 	}
 
-	betype<T>& operator-=(const betype<T>& v)
+	constexpr betype& operator-=(const betype& v)
 	{
 		m_value = SwapEndian(T(value() - v.value()));
 		return *this;
 	}
 
-	betype<T>& operator*=(const betype<T>& v)
+	constexpr betype& operator*=(const betype& v)
 	{
 		m_value = SwapEndian(T(value() * v.value()));
 		return *this;
 	}
 
-	betype<T>& operator/=(const betype<T>& v)
+	constexpr betype& operator/=(const betype& v)
 	{
 		m_value = SwapEndian(T(value() / v.value()));
 		return *this;
 	}
 
-	betype<T>& operator&=(const betype<T>& v) requires (requires (T& x, const T& y) { x &= y; })
+	constexpr betype& operator&=(const betype& v) requires (requires (T& x, const T& y) { x &= y; })
 	{
 		m_value &= v.m_value;
 		return *this;
 	}
 
-	betype<T>& operator|=(const betype<T>& v) requires (requires (T& x, const T& y) { x |= y; })
+	constexpr betype& operator|=(const betype& v) requires (requires (T& x, const T& y) { x |= y; })
 	{
 		m_value |= v.m_value;
 		return *this;
 	}
 
-	betype<T>& operator|(const betype<T>& v) const requires (requires (T& x, const T& y) { x | y; })
-	{
-		betype<T> tmp(*this);
-		tmp.m_value = tmp.m_value | v.m_value;
-		return tmp;
-	}
-
-	betype<T> operator|(const T& v) const requires (requires (T& x, const T& y) { x | y; })
-	{
-		betype<T> tmp(*this);
-		tmp.m_value = tmp.m_value | SwapEndian(v);
-		return tmp;
-	}
-
-	betype<T>& operator^=(const betype<T>& v) requires std::integral<T>
+	constexpr betype& operator^=(const betype& v) requires (requires (T& x, const T& y) { x ^= y; })
 	{
 		m_value ^= v.m_value;
 		return *this;
 	}
 
-	betype<T>& operator>>=(std::size_t idx) requires std::integral<T>
+	constexpr betype& operator>>=(std::size_t idx) requires std::integral<T>
 	{
 		m_value = SwapEndian(T(value() >> idx));
 		return *this;
 	}
 
-	betype<T>& operator<<=(std::size_t idx) requires std::integral<T>
+	constexpr betype& operator<<=(std::size_t idx) requires std::integral<T>
 	{
 		m_value = SwapEndian(T(value() << idx));
 		return *this;
 	}
 
-	betype<T> operator~() const requires std::integral<T>
+	constexpr betype operator~() const requires std::integral<T>
 	{
 		return from_bevalue(T(~m_value));
 	}
 
 	// pre-increment
-	betype<T>& operator++() requires std::integral<T>
+	constexpr betype& operator++() requires std::integral<T>
 	{
 		m_value = SwapEndian(T(value() + 1));
 		return *this;
 	}
 
 	// post-increment
-	betype<T> operator++(int) requires std::integral<T>
+	constexpr betype operator++(int) requires std::integral<T>
 	{
 		betype<T> tmp(*this);
 		m_value = SwapEndian(T(value() + 1));
@@ -210,16 +191,16 @@ public:
 	}
 
 	// pre-decrement
-	betype<T>& operator--() requires std::integral<T>
+	constexpr betype& operator--() requires std::integral<T>
 	{
 		m_value = SwapEndian(T(value() - 1));
 		return *this;
 	}
 
 	// post-decrement
-	betype<T> operator--(int) requires std::integral<T>
+	constexpr betype operator--(int) requires std::integral<T>
 	{
-		betype<T> tmp(*this);
+		betype tmp(*this);
 		m_value = SwapEndian(T(value() - 1));
 		return tmp;
 	}
