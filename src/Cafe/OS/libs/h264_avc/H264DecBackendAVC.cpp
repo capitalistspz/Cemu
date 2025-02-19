@@ -13,26 +13,15 @@ namespace H264
 
 	class H264AVCDecoder : public H264DecoderBackend
 	{
-		static void* ivd_aligned_malloc(void* ctxt, WORD32 alignment, WORD32 size)
+		static void* ivd_aligned_malloc(void* ctxt, WORD32 alignmentIn, WORD32 size)
 		{
+			size_t alignment = std::max<WORD32>(alignmentIn, sizeof(void*));
+			alignment = std::bit_ceil(alignment);
 #ifdef _WIN32
 			return _aligned_malloc(size, alignment);
 #else
-			// alignment is atleast sizeof(void*)
-			alignment = std::max<WORD32>(alignment, sizeof(void*));
-
-			//smallest multiple of 2 at least as large as alignment
-			alignment--;
-			alignment |= alignment << 1;
-			alignment |= alignment >> 1;
-			alignment |= alignment >> 2;
-			alignment |= alignment >> 4;
-			alignment |= alignment >> 8;
-			alignment |= alignment >> 16;
-			alignment ^= (alignment >> 1);
-
 			void* temp;
-			posix_memalign(&temp, (size_t)alignment, (size_t)size);
+			posix_memalign(&temp, alignment, static_cast<size_t>(size));
 			return temp;
 #endif
 		}
