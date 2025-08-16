@@ -6,12 +6,11 @@ std::unordered_set<std::string> s_unsupportedHLECalls;
 
 void PPCInterpreter_handleUnsupportedHLECall(PPCInterpreter_t* hCPU)
 {
-	const char* libFuncName = (char*)memory_getPointerFromVirtualOffset(hCPU->instructionPointer + 8);
-	std::string tempString = fmt::format("Unsupported lib call: {}", libFuncName);
-	if (s_unsupportedHLECalls.find(tempString) == s_unsupportedHLECalls.end())
+	std::string libFuncName = reinterpret_cast<const char*>(memory_getPointerFromVirtualOffset(hCPU->instructionPointer + 8));
+	if (!s_unsupportedHLECalls.contains(libFuncName))
 	{
-		cemuLog_log(LogType::UnsupportedAPI, "{}", tempString);
-		s_unsupportedHLECalls.emplace(tempString);
+		cemuLog_log(LogType::UnsupportedAPI, "Unsupported lib call: {}", libFuncName);
+		s_unsupportedHLECalls.emplace(std::move(libFuncName));
 	}
 	hCPU->gpr[3] = 0;
 	PPCInterpreter_nextInstruction(hCPU);
