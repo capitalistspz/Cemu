@@ -13,7 +13,7 @@ public:
 	
 	~SDLController() override;
 	
-	std::string_view api_name() const override
+	constexpr std::string_view api_name() const override
 	{
 		static_assert(to_string(InputAPI::SDLController) == "SDLController");
 		return to_string(InputAPI::SDLController);

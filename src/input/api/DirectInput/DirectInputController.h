@@ -11,7 +11,7 @@ public:
 	DirectInputController(const GUID& guid, std::string_view display_name);
 	~DirectInputController() override;
 	
-	std::string_view api_name() const override
+	constexpr std::string_view api_name() const override
 	{
 		static_assert(to_string(InputAPI::DirectInput) == "DirectInput");
 		return to_string(InputAPI::DirectInput);

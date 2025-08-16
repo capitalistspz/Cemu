@@ -90,7 +90,7 @@ public:
 	const std::string& uuid() const { return m_uuid; }
 	const std::string& display_name() const { return m_display_name; }
 	
-	virtual std::string_view api_name() const = 0;
+	constexpr virtual std::string_view api_name() const = 0;
 	virtual InputAPI::Type api() const = 0;
 
 	virtual void update() {}

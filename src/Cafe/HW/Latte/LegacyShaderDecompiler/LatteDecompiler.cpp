@@ -602,7 +602,7 @@ void LatteDecompiler_ParseALUClause(LatteDecompilerShader* shaderContext, LatteD
 				else
 					parserIndex += 1;
 				// set literal data for all instructions of the current instruction group
-				for(auto& aluInstructionItr : reverse_itr(cfInstruction->instructionsALU) )
+				for(auto& aluInstructionItr : cfInstruction->instructionsALU | std::views::reverse)
 				{
 					if( aluInstructionItr.instructionGroupIndex != instructionGroupIndex )
 						break;

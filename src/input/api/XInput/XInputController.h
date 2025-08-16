@@ -8,7 +8,7 @@ class XInputController : public Controller<XInputControllerProvider>
 public:
 	XInputController(uint32 index);
 	
-	std::string_view api_name() const override
+	constexpr std::string_view api_name() const override
 	{
 		static_assert(to_string(InputAPI::XInput) == "XInput");
 		return to_string(InputAPI::XInput);

@@ -17,7 +17,7 @@ public:
 		MotionPlus,
 	};
 	
-	std::string_view api_name() const override
+	constexpr std::string_view api_name() const override
 	{
 		static_assert(to_string(InputAPI::Wiimote) == "Wiimote");
 		return to_string(InputAPI::Wiimote);

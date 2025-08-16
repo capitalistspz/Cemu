@@ -17,7 +17,7 @@ public:
 	virtual ~ControllerProviderBase() = default;
 
 	virtual InputAPI::Type api() const = 0;
-	std::string_view api_name() const { return to_string(api()); }
+	constexpr std::string_view api_name() const { return to_string(api()); }
 
 	virtual std::vector<std::shared_ptr<ControllerBase>> get_controllers() = 0;
 

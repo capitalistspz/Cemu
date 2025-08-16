@@ -13,7 +13,7 @@ public:
 	DSUController(uint32 index);
 	DSUController(uint32 index, const DSUProviderSettings& settings);
 	
-	std::string_view api_name() const override
+	constexpr std::string_view api_name() const override
 	{
 		static_assert(to_string(InputAPI::DSUClient) == "DSUController");
 		return to_string(InputAPI::DSUClient);

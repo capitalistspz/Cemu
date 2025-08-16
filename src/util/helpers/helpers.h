@@ -17,17 +17,6 @@ constexpr auto to_underlying(TType v) noexcept
 	return static_cast<std::underlying_type_t<TType>>(v);
 }
 
-// wrapper to allow reverse iteration with range-based loops before C++20
-template<typename T>
-class reverse_itr {
-private:
-	T& iterable_;
-public:
-	explicit reverse_itr(T& iterable) : iterable_{ iterable } {}
-	auto begin() const { return std::rbegin(iterable_); }
-	auto end() const { return std::rend(iterable_); }
-};
-
 #ifndef M_PI
 #define M_PI       3.14159265358979323846
 #endif

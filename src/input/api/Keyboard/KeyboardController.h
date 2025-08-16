@@ -8,7 +8,7 @@ class KeyboardController : public Controller<KeyboardControllerProvider>
 public:
 	KeyboardController();
 
-	std::string_view api_name() const override // TODO: use constexpr virtual function with c++20
+	constexpr std::string_view api_name() const override
 	{
 		static_assert(to_string(InputAPI::Keyboard) == "Keyboard");
 		return to_string(InputAPI::Keyboard);
