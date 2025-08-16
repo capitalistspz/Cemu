@@ -21,7 +21,7 @@ HLECALL s_ppcHleTable[HLE_TABLE_CAPACITY]{};
 sint32 s_ppcHleTableWriteIndex = 0;
 std::mutex s_ppcHleTableMutex;
 
-HLEIDX PPCInterpreter_registerHLECall(HLECALL hleCall, std::string hleName)
+HLEIDX PPCInterpreter_registerHLECall(HLECALL hleCall)
 {
 	std::unique_lock _l(s_ppcHleTableMutex);
 	if (s_ppcHleTableWriteIndex >= HLE_TABLE_CAPACITY)

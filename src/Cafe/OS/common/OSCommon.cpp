@@ -95,11 +95,11 @@ void osLib_addFunctionInternal(const char* libraryName, const char* functionName
 			it.funcHashA == funcHashA &&
 			it.funcHashB == funcHashB)
 		{
-			it.hleFunc = PPCInterpreter_registerHLECall(osFunction, hleName);
+			it.hleFunc = PPCInterpreter_registerHLECall(osFunction);
 			return;
 		}
 	}
-	s_osFunctionTable->emplace_back(libHashA, libHashB, funcHashA, funcHashB, hleName, PPCInterpreter_registerHLECall(osFunction, hleName));
+	s_osFunctionTable->emplace_back(libHashA, libHashB, funcHashA, funcHashB, hleName, PPCInterpreter_registerHLECall(osFunction));
 }
 
 extern "C" DLLEXPORT void osLib_registerHLEFunction(const char* libraryName, const char* functionName, void(*osFunction)(PPCInterpreter_t * hCPU))
