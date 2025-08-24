@@ -5,7 +5,6 @@
 #include "Cafe/HW/Latte/Renderer/RendererOuputShader.h"
 #include "Cafe/Filesystem/fsc.h"
 #include "boost/algorithm/string.hpp"
-#include "util/helpers/MapAdaptor.h"
 #include "util/helpers/StringParser.h"
 #include "Cafe/HW/Latte/Core/LatteTiming.h"
 #include "util/IniParser/IniParser.h"
@@ -453,7 +452,7 @@ GraphicPack2::GraphicPack2(fs::path rulesPath, IniParser& rules)
 		}
 
 		// have first entry be default active for every category if no default= is set
-		for(auto entry : get_values(tmp_map))
+		for(auto entry : tmp_map | std::views::values)
 		{
 			if (!entry.empty())
 			{
@@ -485,8 +484,11 @@ GraphicPack2::GraphicPack2(fs::path rulesPath, IniParser& rules)
 					throw std::exception();
 				}
 
-				std::set<std::string> keys1(get_keys(p1->variables).begin(), get_keys(p1->variables).end());
-				std::set<std::string> keys2(get_keys(p2->variables).begin(), get_keys(p2->variables).end());
+				auto p1VarKeys = p1->variables | std::views::keys;
+				auto p2VarKeys = p2->variables | std::views::keys;
+
+				std::set<std::string> keys1(p1VarKeys.begin(), p1VarKeys.end());
+				std::set<std::string> keys2(p2VarKeys.begin(), p2VarKeys.end());
 				if (keys1 != keys2)
 				{
 					cemuLog_log(LogType::Force, "Graphic pack: \"{}\" contains inconsistent preset variables", GetNormalizedPathString());
