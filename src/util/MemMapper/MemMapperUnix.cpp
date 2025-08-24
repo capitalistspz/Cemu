@@ -5,16 +5,19 @@
 
 namespace MemMapper
 {
-	const size_t sPageSize{ []()
-		{
-		return (size_t)getpagesize();
-	}()
-	};
 
+#if BOOST_OS_MACOS
+	size_t GetPageSize()
+	{
+		return static_cast<size_t>(sysconf(_SC_PAGESIZE));
+	}
+#else // Other POSIX systems guarantee that sysconf values do not change during runtime
+	const size_t sPageSize = static_cast<size_t>(sysconf(_SC_PAGESIZE));
 	size_t GetPageSize()
 	{
 		return sPageSize;
 	}
+#endif
 
 	int GetProt(PAGE_PERMISSION permissionFlags)
 	{
@@ -45,7 +48,7 @@ namespace MemMapper
 		void* r;
 		if(fromReservation)
 		{
-		    uint64 page_size = sysconf(_SC_PAGESIZE);
+		    uint64 page_size = GetPageSize();
 		    void* page = baseAddr;
 		    if ( (uint64) baseAddr % page_size != 0 )
 		        page = (void*) ((uint64)baseAddr & ~(page_size - 1));
