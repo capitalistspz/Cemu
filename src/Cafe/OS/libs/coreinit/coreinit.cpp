@@ -34,6 +34,7 @@
 #include "Cafe/OS/libs/coreinit/coreinit_MEM_FrmHeap.h"
 #include "Cafe/OS/libs/coreinit/coreinit_MEM_BlockHeap.h"
 #include "Cafe/OS/libs/coreinit/coreinit_MEM_ExpHeap.h"
+#include "Cafe/OS/libs/coreinit/coreinit_Smd.h"
 
 CoreinitSharedData* gCoreinitData = nullptr;
 
@@ -350,6 +351,7 @@ namespace coreinit
 			coreinit::InitializeCodeGen();
 			coreinit::InitializeCoroutine();
 			coreinit::InitializeOSScreen();
+			coreinit::smd::Initialize();
 
 			// legacy mem stuff
 			coreinit::expheap_load();

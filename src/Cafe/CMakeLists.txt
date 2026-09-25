@@ -489,6 +489,8 @@ add_library(CemuCafe
   TitleList/TitleInfo.h
   TitleList/TitleList.cpp
   TitleList/TitleList.h
+  OS/libs/coreinit/coreinit_Smd.cpp
+  OS/libs/coreinit/coreinit_Smd.h
 )
 
 if (ENABLE_OPENGL)
