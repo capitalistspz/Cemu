@@ -8,6 +8,7 @@ namespace coreinit
 
 	void* OSBlockMove(MEMPTR<void> dst, MEMPTR<void> src, uint32 size, bool flushDC);
 	void* OSBlockSet(MEMPTR<void> dst, uint32 value, uint32 size);
+	MPTR OSEffectiveToPhysical(MPTR);
 
 	void OSMemoryBarrier();
 }
