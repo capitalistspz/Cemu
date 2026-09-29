@@ -89,10 +89,10 @@ namespace iosu
 						IOS_ResourceReply(cmd, IOS_ERROR_INVALID);
 						continue;
 					}
-					uint32 requestId = cmd->args[0];
-					uint32 numIn = cmd->args[1];
-					uint32 numOut = cmd->args[2];
-					IPCIoctlVector* vec = MEMPTR<IPCIoctlVector>{ cmd->args[3] }.GetPtr();
+					uint32 requestId = cmd->args.ioctlv.requestId;
+					uint32 numIn = cmd->args.ioctlv.numIn;
+					uint32 numOut = cmd->args.ioctlv.numOut;
+					IPCIoctlVector* vec = cmd->args.ioctlv.vecs;
 					IPCIoctlVector* vecIn = vec + 0; // the ordering of vecIn/vecOut differs from IPCService
 					IPCIoctlVector* vecOut = vec + numIn;
 					m_delayResponse = false;
@@ -187,10 +187,10 @@ namespace iosu
 				}
 				else if (cmd->cmdId == IPCCommandId::IOS_IOCTLV)
 				{
-					uint32 requestId = cmd->args[0];
-					uint32 numOut = cmd->args[1];
-					uint32 numIn = cmd->args[2];
-					IPCIoctlVector* vec = MEMPTR<IPCIoctlVector>{ cmd->args[3] }.GetPtr();
+					uint32 requestId = cmd->args.ioctlv.requestId;
+					uint32 numOut = cmd->args.ioctlv.numOut;
+					uint32 numIn = cmd->args.ioctlv.numIn;
+					IPCIoctlVector* vec = cmd->args.ioctlv.vecs;
 					IPCIoctlVector* vecOut = vec + 0; // out buffers come first
 					IPCIoctlVector* vecIn = vec + numOut;
 

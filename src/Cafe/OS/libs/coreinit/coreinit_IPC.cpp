@@ -227,16 +227,16 @@ namespace coreinit
 			switch (res->resourcePtr->commandBody.cmdId)
 			{
 			case IPCCommandId::IOS_OPEN:
-				res->resourcePtr->commandBody.args[0] = res->resourcePtr->commandBody.ppcVirt0.GetMPTR();
+				res->resourcePtr->commandBody.args.open.path = res->resourcePtr->commandBody.ppcVirt0.GetMPTR();
 				break;
 			case IPCCommandId::IOS_CLOSE:
 				break;
 			case IPCCommandId::IOS_IOCTL:
-				res->resourcePtr->commandBody.args[1] = res->resourcePtr->commandBody.ppcVirt0.GetMPTR();
-				res->resourcePtr->commandBody.args[3] = res->resourcePtr->commandBody.ppcVirt1.GetMPTR();
+				res->resourcePtr->commandBody.args.ioctl.ptrIn = res->resourcePtr->commandBody.ppcVirt0.GetMPTR();
+				res->resourcePtr->commandBody.args.ioctl.ptrOut = res->resourcePtr->commandBody.ppcVirt1.GetMPTR();
 				break;
 			case IPCCommandId::IOS_IOCTLV:
-				res->resourcePtr->commandBody.args[3] = res->resourcePtr->commandBody.ppcVirt0.GetMPTR();
+				res->resourcePtr->commandBody.args.ioctlv.vecs = res->resourcePtr->commandBody.ppcVirt0.GetMPTR();
 				break;
 			default:
 				cemu_assert_unimplemented();
@@ -334,19 +334,24 @@ namespace coreinit
 		memcpy(buffer, devicePath, pathLen + 1);
 
 		cmdBody.ppcVirt0 = MEMPTR<void>(buffer).GetMPTR();
-		cmdBody.args[0] = 0;
-		cmdBody.args[1] = (uint32)(pathLen + 1);
-		cmdBody.args[2] = flags;
+		cmdBody.args.open = {
+			.path = nullptr,
+			.pathSize = static_cast<uint32>(pathLen + 1),
+			.flags = flags
+		};
 	}
 
 	IOS_ERROR _IPCDriver_SetupCmd_IOSIoctl(IPCDriver& ipcDriver, IPCResourceBufferDescriptor* requestDescriptor, uint32 requestId, void* ptrIn, uint32 sizeIn, void* ptrOut, uint32 sizeOut)
 	{
 		IPCCommandBody& cmdBody = requestDescriptor->resourcePtr->commandBody;
-		cmdBody.args[0] = requestId;
-		cmdBody.args[1] = MPTR_NULL; // set to ppcVirt0 later
-		cmdBody.args[2] = sizeIn;
-		cmdBody.args[3] = MPTR_NULL; // set to ppcVirt1 later
-		cmdBody.args[4] = sizeOut;
+		cmdBody.args.ioctl = {
+			.requestId = requestId,
+			.ptrIn = nullptr, // Set to ppcVirt0 at submit
+			.sizeIn = sizeIn,
+			.ptrOut = nullptr, // Set to ppcVirt1 at submit
+			.sizeOut = sizeOut
+		};
+
 		cmdBody.ppcVirt0 = MEMPTR<void>(ptrIn).GetMPTR();
 		cmdBody.ppcVirt1 = MEMPTR<void>(ptrOut).GetMPTR();
 		return IOS_ERROR_OK;
@@ -357,10 +362,12 @@ namespace coreinit
 		IPCCommandBody& cmdBody = requestDescriptor->resourcePtr->commandBody;
 		// set args
 		cmdBody.ppcVirt0 = MEMPTR<void>(vec).GetMPTR();
-		cmdBody.args[0] = requestId;
-		cmdBody.args[1] = numIn;
-		cmdBody.args[2] = numOut;
-		cmdBody.args[3] = 0; // set to ppcVirt0 later
+		cmdBody.args.ioctlv = {
+			.requestId = requestId,
+			.numIn = numIn,
+			.numOut = numOut,
+			.vecs = nullptr // set to ppcVirt0 at submit
+		};
 		return IOS_ERROR_OK;
 	}
 

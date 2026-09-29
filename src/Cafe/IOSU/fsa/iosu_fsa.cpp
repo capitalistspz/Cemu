@@ -865,16 +865,17 @@ namespace iosu
 				{
 					cemu_assert(clientHandle < sFSAClientArray.size());
 					cemu_assert(sFSAClientArray[clientHandle].isAllocated);
-					FSAHandleCommandIoctl(sFSAClientArray.data() + clientHandle, cmd, (FSA_CMD_OPERATION_TYPE)cmd->args[0].value(), MEMPTR<void>(cmd->args[1]), MEMPTR<void>(cmd->args[3]));
+					auto& ioctlArgs = cmd->args.ioctl;
+					FSAHandleCommandIoctl(sFSAClientArray.data() + clientHandle, cmd, (FSA_CMD_OPERATION_TYPE)ioctlArgs.requestId.value(), ioctlArgs.ptrIn, ioctlArgs.ptrOut);
 				}
 				else if (cmd->cmdId == IPCCommandId::IOS_IOCTLV)
 				{
 					cemu_assert(clientHandle < sFSAClientArray.size());
 					cemu_assert(sFSAClientArray[clientHandle].isAllocated);
-					FSA_CMD_OPERATION_TYPE requestId = (FSA_CMD_OPERATION_TYPE)cmd->args[0].value();
-					uint32 numIn = cmd->args[1];
-					uint32 numOut = cmd->args[2];
-					IPCIoctlVector* vec = MEMPTR<IPCIoctlVector>{cmd->args[3]}.GetPtr();
+					FSA_CMD_OPERATION_TYPE requestId = (FSA_CMD_OPERATION_TYPE)cmd->args.ioctlv.requestId.value();
+					uint32 numIn = cmd->args.ioctlv.numIn;
+					uint32 numOut = cmd->args.ioctlv.numOut;
+					IPCIoctlVector* vec = cmd->args.ioctlv.vecs;
 					FSAHandleCommandIoctlv(sFSAClientArray.data() + clientHandle, cmd, requestId, numIn, numOut, vec);
 				}
 				else

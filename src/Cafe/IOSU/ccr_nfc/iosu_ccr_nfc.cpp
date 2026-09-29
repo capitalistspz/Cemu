@@ -331,11 +331,11 @@ namespace iosu
 				else if (cmd->cmdId == IPCCommandId::IOS_IOCTL)
 				{
 					sint32 result;
-					uint32 requestId = cmd->args[0];
-					void* ptrIn = MEMPTR<void>(cmd->args[1]);
-					uint32 sizeIn = cmd->args[2];
-					void* ptrOut = MEMPTR<void>(cmd->args[3]);
-					uint32 sizeOut = cmd->args[4];
+					uint32 requestId = cmd->args.ioctl.requestId;
+					void* ptrIn = cmd->args.ioctl.ptrIn;
+					uint32 sizeIn = cmd->args.ioctl.sizeIn;
+					void* ptrOut = cmd->args.ioctl.ptrOut;
+					uint32 sizeOut = cmd->args.ioctl.sizeOut;
 
 					if ((result = __CCRNFCValidateCryptData(static_cast<CCRNFCCryptData*>(ptrIn), sizeIn, true)) == 0 && 
 						(result = __CCRNFCValidateCryptData(static_cast<CCRNFCCryptData*>(ptrOut), sizeOut, false)) == 0)

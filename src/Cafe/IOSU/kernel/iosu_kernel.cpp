@@ -595,11 +595,11 @@ namespace iosu
 
 		IOS_ERROR _IPCHandlerIn_IOS_Open(IOSDispatchableCommand* dispatchCmd)
 		{
-			IPCCommandBody& cmd = dispatchCmd->body;
-			const char* name = MEMPTR<const char>(cmd.args[0]).GetPtr();
-			uint32 nameLenPlusOne = cmd.args[1];
+			const auto& args = dispatchCmd->body.args.open;
+			const char* name = args.path;
+			uint32 nameLenPlusOne = args.pathSize;
 			cemu_assert(nameLenPlusOne > 0);
-			uint32 flags = cmd.args[2];
+			uint32 flags = args.flags;
 			cemu_assert_debug(flags == 0);
 
 			std::string devicePath{ name, nameLenPlusOne - 1 };
@@ -630,17 +630,17 @@ namespace iosu
 
 		IOS_ERROR _IPCHandlerIn_IOS_Ioctlv(IOSDispatchableCommand* dispatchCmd)
 		{
-			IPCCommandBody& cmd = dispatchCmd->body;
-			uint32 requestId = dispatchCmd->body.args[0];
-			uint32 numIn = dispatchCmd->body.args[1];
-			uint32 numOut = dispatchCmd->body.args[2];
-			IPCIoctlVector* vec = MEMPTR<IPCIoctlVector>(cmd.args[3]).GetPtr();
+			const auto& args = dispatchCmd->body.args.ioctlv;
+			uint32 requestId = args.requestId;
+			uint32 numIn = args.numIn;
+			uint32 numOut = args.numOut;
+			IPCIoctlVector* vec = args.vecs;
 			// copy the vector array
 			uint32 numVec = numIn + numOut;
 			if (numVec <= 8)
 			{
 				std::copy(vec, vec + numVec, dispatchCmd->vecCopy);
-				dispatchCmd->body.args[3] = MEMPTR<IPCIoctlVector>(vec).GetMPTR();
+				dispatchCmd->body.args.ioctlv.vecs = vec;
 			}
 			else
 			{
@@ -653,9 +653,10 @@ namespace iosu
 		// normally COS kernel handles this, but currently we skip the IPC getting proxied through it
 		IOS_ERROR _IPCHandlerIn_TranslateVectorAddresses(IOSDispatchableCommand* dispatchCmd)
 		{
-			uint32 numIn = dispatchCmd->body.args[1];
-			uint32 numOut = dispatchCmd->body.args[2];
-			IPCIoctlVector* vec = MEMPTR<IPCIoctlVector>(dispatchCmd->body.args[3]).GetPtr();
+			auto& args = dispatchCmd->body.args.ioctlv;
+			uint32 numIn = args.numIn;
+			uint32 numOut = args.numOut;
+			IPCIoctlVector* vec = args.vecs;
 			for (uint32 i = 0; i < numIn + numOut; i++)
 			{
 				if (vec[i].baseVirt == nullptr && vec[i].size != 0)

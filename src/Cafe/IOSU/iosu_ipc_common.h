@@ -39,7 +39,33 @@ struct IPCCommandBody
 	/* +0x18 */ uint32be ukn18;
 	/* +0x1C */ uint32be ukn1C;
 	/* +0x20 */ uint32be ukn20;
-	/* +0x24 */ uint32be args[5];
+	/* +0x24 */ union
+	{
+		// Has to be default initialized because MEMPTR is not trivially default constructible
+		uint32be raw[5] {};
+		struct
+		{
+			MEMPTR<char> path;
+			// Path Length + 1
+			uint32be pathSize;
+			uint32be flags;
+		} open;
+		struct
+		{
+			uint32be requestId;
+			MEMPTR<void> ptrIn;
+			uint32be sizeIn;
+			MEMPTR<void> ptrOut;
+			uint32be sizeOut;
+		} ioctl;
+		struct
+		{
+			uint32be requestId;
+			uint32be numIn;
+			uint32be numOut;
+			MEMPTR<IPCIoctlVector> vecs;
+		} ioctlv;
+	} args;
 	// anything below may only be present on the PPC side?
 	/* +0x38 */ betype<IPCCommandId> prev_cmdId;
 	/* +0x3C */ betype<IOSDevHandle> prev_devHandle;

@@ -111,10 +111,10 @@ namespace iosu
 				}
 				else if (cmd->cmdId == IPCCommandId::IOS_IOCTLV)
 				{
-					uint32 requestId = cmd->args[0];
-					uint32 numIn = cmd->args[1];
-					uint32 numOut = cmd->args[2];
-					IPCIoctlVector* vec = MEMPTR<IPCIoctlVector>{ cmd->args[3] }.GetPtr();
+					uint32 requestId = cmd->args.ioctlv.requestId;
+					uint32 numIn = cmd->args.ioctlv.numIn;
+					uint32 numOut = cmd->args.ioctlv.numOut;
+					IPCIoctlVector* vec = cmd->args.ioctlv.vecs;
 					IPCIoctlVector* vecIn = vec + numIn;
 					IPCIoctlVector* vecOut = vec + 0;
 					cemuLog_log(LogType::Force, "{}: Received unsupported Ioctlv cmd", s_devicePath);
@@ -123,7 +123,8 @@ namespace iosu
 				}
 				else if (cmd->cmdId == IPCCommandId::IOS_IOCTL)
 				{
-					ODMHandleCommandIoctl(clientHandle, cmd, (ODM_CMD_OPERATION_TYPE)cmd->args[0].value(), MEMPTR<void>(cmd->args[1]), cmd->args[2], MEMPTR<void>(cmd->args[3]), cmd->args[4]);
+					auto& [requestId, ptrIn, sizeIn, ptrOut, sizeOut] = cmd->args.ioctl;
+					ODMHandleCommandIoctl(clientHandle, cmd, (ODM_CMD_OPERATION_TYPE)requestId.value(), ptrIn, sizeIn, ptrOut, sizeOut);
 				}
 				else
 				{
