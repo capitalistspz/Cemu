@@ -8,18 +8,6 @@
 
 namespace coreinit::smd
 {
-	enum class SmdError : sint32
-	{
-		Ok = 0,
-		InvalidState = -786446,
-		Uninitialized = -786447,
-		InvalidElemType = -786432,
-		QueueEmpty = -786437,
-		QueueFull = -786436,
-		InvalidSmd = -786435,
-		InvalidVectors = -786434,
-		MsgTooLarge = -786433,
-	};
 
 	struct SmdPpc
 	{
@@ -65,7 +53,6 @@ namespace coreinit::smd
 	{
 		static uint32 smdAvailableWrites(SmdInterface& iface);
 		static uint32 smdAvailableReads(SmdInterface& iface);
-		static SmdError smdSend(SmdPpc& smdPpc, SmdElementType elemType, const uint8* data, uint size);
 	}
 
 
@@ -160,7 +147,11 @@ namespace coreinit::smd
 			return SmdError::InvalidState;
 		if (bufferSize > 0x80)
 			return SmdError::MsgTooLarge;
-		return internal::smdSend(*smd, SmdElementType::Bytes, buffer, bufferSize);
+		auto elem = SmdElement{};
+		elem.type = SmdElementType::Bytes;
+		elem.size = bufferSize;
+		std::memcpy(&elem.u.data, buffer, bufferSize);
+		return smdInterfaceSend(smd->ctrlTable->ppcToIopInterface, smd->writeBuf, elem);
 	}
 
 	uint32 internal::smdAvailableWrites(SmdInterface& iface)
@@ -187,39 +178,15 @@ namespace coreinit::smd
 		return iface.capacity - readIndex + writeIndex;
 	}
 
-	SmdError internal::smdSend(SmdPpc& smdPpc, SmdElementType elemType, const uint8* data, uint size)
+	SmdError smdInterfaceReceive(SmdInterface& iface, const SmdElement* buffer, SmdElement& received)
 	{
-		SmdInterface& iface = smdPpc.ctrlTable->ppcToIopInterface;
-		if (smdAvailableWrites(iface) < 2)
-			return SmdError::QueueFull;
-		const auto writeIndexRef = stdx::atomic_ref(iface.writeIndex);
-
-		const auto currentIndex = writeIndexRef.load(std::memory_order::acquire);
-		SmdElement* newElem = smdPpc.writeBuf + currentIndex;
-		newElem->type = elemType;
-		newElem->size = size;
-		std::memcpy(&newElem->u.data, data, size);
-
-		const auto newIndex = (currentIndex + 1) % static_cast<sint32>(iface.capacity);
-		writeIndexRef.store(newIndex, std::memory_order::release);
-		return SmdError::Ok;
-	}
-
-	SmdError smdPpcReceive(SmdPpc* smdPpc, SmdElement* received)
-	{
-		if (!smdPpc || smdPpc->self != smdPpc)
-			return SmdError::InvalidSmd;
-		auto l = SmdLockGuard(smdPpc);
-		if (smdPpc->state != SmdPpcState::Opened)
-			return SmdError::InvalidState;
-		SmdInterface& iface = smdPpc->ctrlTable->iopToPpcInterface;
 		if (internal::smdAvailableReads(iface) < 1)
 			return SmdError::QueueEmpty;
 
 		const auto readIndexRef = stdx::atomic_ref(iface.readIndex);
 
 		const auto currentIndex = readIndexRef.load(std::memory_order::acquire);
-		const auto currentElem = smdPpc->readBuf + iface.readIndex;
+		const auto currentElem = buffer + currentIndex;
 
 		const auto newIndex = (currentIndex + 1) % static_cast<sint32>(iface.capacity);
 
@@ -227,7 +194,7 @@ namespace coreinit::smd
 		{
 		case SmdElementType::Bytes:
 		{
-			*received = *currentElem;
+			received = *currentElem;
 			break;
 		}
 		case SmdElementType::VectorSpec:
@@ -243,6 +210,32 @@ namespace coreinit::smd
 
 		readIndexRef.store(newIndex, std::memory_order::release);
 		return SmdError::Ok;
+	}
+
+	SmdError smdInterfaceSend(SmdInterface& iface, SmdElement* buffer, const SmdElement& element)
+	{
+		if (internal::smdAvailableWrites(iface) < 2)
+			return SmdError::QueueFull;
+		const auto writeIndexRef = stdx::atomic_ref(iface.writeIndex);
+
+		const auto currentIndex = writeIndexRef.load(std::memory_order::acquire);
+		SmdElement* newElem = buffer + currentIndex;
+		*newElem = element;
+
+		const auto newIndex = (currentIndex + 1) % static_cast<sint32>(iface.capacity);
+		writeIndexRef.store(newIndex, std::memory_order::release);
+		return SmdError::Ok;
+	}
+
+	SmdError smdPpcReceive(SmdPpc* smdPpc, SmdElement* received)
+	{
+		if (!smdPpc || smdPpc->self != smdPpc)
+			return SmdError::InvalidSmd;
+		auto l = SmdLockGuard(smdPpc);
+		if (smdPpc->state != SmdPpcState::Opened)
+			return SmdError::InvalidState;
+		SmdInterface& iface = smdPpc->ctrlTable->iopToPpcInterface;
+		return smdInterfaceReceive(iface, smdPpc->readBuf, *received);
 	}
 
 	SmdError smdPpcGetCtrlTableVectors(SmdPpc *smd, SmdPpcCtrlTableVectors *ctrlTableVecs)

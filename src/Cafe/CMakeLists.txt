@@ -212,6 +212,8 @@ add_library(CemuCafe
   IOSU/PDM/iosu_pdm.h
   IOSU/ODM/iosu_odm.cpp
   IOSU/ODM/iosu_odm.h
+  IOSU/smd/iosu_smd.cpp
+  IOSU/smd/iosu_smd.h
   OS/common/OSCommon.cpp
   OS/common/OSCommon.h
   OS/common/OSUtil.h

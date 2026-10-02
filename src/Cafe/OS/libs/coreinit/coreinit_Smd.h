@@ -3,6 +3,21 @@
 
 namespace coreinit::smd
 {
+	enum class SmdError : sint32
+	{
+		Ok = 0,
+		Uninitialized = -786447,
+		InvalidState = -786446,
+		IopInvalidState = -786445,
+		InvalidArgument = -786439,
+		QueueEmpty = -786437,
+		QueueFull = -786436,
+		InvalidSmd = -786435,
+		InvalidVectors = -786434,
+		MsgTooLarge = -786433,
+		InvalidElemType = -786432,
+	};
+
 	enum class SmdLockType : uint32
 	{
 		Mutex = 0,
@@ -98,6 +113,9 @@ namespace coreinit::smd
 		uint32be readBufSize;
 	};
 	static_assert(sizeof(SmdPpcCtrlTableVectors) == 0x18);
+
+	SmdError smdInterfaceReceive(SmdInterface& interface, const SmdElement* elementBuffer, SmdElement& received);
+	SmdError smdInterfaceSend(SmdInterface& iface, SmdElement* buffer, const SmdElement& element);
 
 	void Initialize();
 };
