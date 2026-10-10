@@ -17,6 +17,7 @@ namespace iosu::smd
 			return SmdError::InvalidArgument;
 		smd.iopBuf = reinterpret_cast<SmdElement*>(memory_getPointerFromPhysicalOffset(table.iopToPpcInterface.bufPhysAddr));
 		smd.ppcBuf = reinterpret_cast<SmdElement*>(memory_getPointerFromPhysicalOffset(table.ppcToIopInterface.bufPhysAddr));
+		return SmdError::Ok;
 	}
 
 	SmdError smdIopOpen(uint32 index)
