@@ -63,7 +63,7 @@ namespace coreinit::smd
 		const auto actualMsgCount = msgCount + 1;
 
 		const auto alignedBuffer = MEMPTR<uint8>((buffer + 3).GetMPTR() & 0xFFFF'FFFC);
-		auto ctrlTable = MEMPTR<SmdCtrlTable>((alignedBuffer.GetMPTR() + 0x87) + 0xFFFF'FFC0);
+		auto ctrlTable = MEMPTR<SmdCtrlTable>((alignedBuffer.GetMPTR() + 0x87) & 0xFFFF'FFC0);
 		const auto smdPpc = reinterpret_cast<SmdPpc*>(alignedBuffer.GetPtr());
 		const auto msgArea = MEMPTR<SmdElement>(ctrlTable + 1);
 		const auto readBuf = msgArea + actualMsgCount;
@@ -96,16 +96,14 @@ namespace coreinit::smd
 		iopIface.writeIndex = 0;
 		iopIface.state = SmdInterfaceState::Initialized;
 		iopIface.capacity = actualMsgCount;
-		iopIface.bufPhysAddr = coreinit::OSEffectiveToPhysical(smdPpc->writeBuf.GetMPTR());
-		iopIface.readIndex = 0;
+		iopIface.bufPhysAddr = OSEffectiveToPhysical(smdPpc->writeBuf.GetMPTR());
 
 		SmdInterface& ppcIface = ctrlTable->iopToPpcInterface;
 		ppcIface.readIndex = 0;
 		ppcIface.writeIndex = 0;
 		ppcIface.state = SmdInterfaceState::Initialized;
 		ppcIface.capacity = actualMsgCount;
-		ppcIface.capacity = actualMsgCount;
-		ppcIface.bufPhysAddr = coreinit::OSEffectiveToPhysical(smdPpc->readBuf.GetMPTR());
+		ppcIface.bufPhysAddr = OSEffectiveToPhysical(smdPpc->readBuf.GetMPTR());
 
 		return smdPpc;
 	}
