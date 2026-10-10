@@ -254,11 +254,11 @@ namespace coreinit::smd
 
 	void Initialize()
 	{
-		cafeExportRegister("coreinit", smdPpcInit, LogType::Force);
-		cafeExportRegister("coreinit", smdPpcOpen, LogType::Force);
-		cafeExportRegister("coreinit", smdPpcClose, LogType::Force);
-		cafeExportRegister("coreinit", smdPpcSendMessage, LogType::Force);
-		cafeExportRegister("coreinit", smdPpcReceive, LogType::Force);
-		cafeExportRegister("coreinit", smdPpcGetCtrlTableVectors, LogType::Force);
+		cafeExportRegister("coreinit", smdPpcInit, LogType::PPC_IPC);
+		cafeExportRegister("coreinit", smdPpcOpen, LogType::PPC_IPC);
+		cafeExportRegister("coreinit", smdPpcClose, LogType::PPC_IPC);
+		cafeExportRegister("coreinit", smdPpcSendMessage, LogType::PPC_IPC);
+		cafeExportRegister("coreinit", smdPpcReceive, LogType::PPC_IPC);
+		cafeExportRegister("coreinit", smdPpcGetCtrlTableVectors, LogType::PPC_IPC);
 	}
 }
