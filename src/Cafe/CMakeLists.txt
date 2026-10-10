@@ -214,6 +214,8 @@ add_library(CemuCafe
   IOSU/ODM/iosu_odm.h
   IOSU/smd/iosu_smd.cpp
   IOSU/smd/iosu_smd.h
+  IOSU/usb_btrm/iosu_usb_btrm.cpp
+  IOSU/usb_btrm/iosu_usb_btrm.h
   OS/common/OSCommon.cpp
   OS/common/OSCommon.h
   OS/common/OSUtil.h

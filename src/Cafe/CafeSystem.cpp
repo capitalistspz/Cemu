@@ -37,6 +37,7 @@
 #include "Cafe/IOSU/PDM/iosu_pdm.h"
 #include "Cafe/IOSU/ccr_nfc/iosu_ccr_nfc.h"
 #include "Cafe/IOSU/nn/boss/boss_service.h"
+#include "Cafe/IOSU/usb_btrm/iosu_usb_btrm.h"
 
 // IOSU initializer functions
 #include "Cafe/IOSU/kernel/iosu_kernel.h"
@@ -600,7 +601,8 @@ namespace CafeSystem
 		iosu::fpd::GetModule(),
 		iosu::pdm::GetModule(),
 		iosu::ccr_nfc::GetModule(),
-		iosu::boss::GetModule()
+		iosu::boss::GetModule(),
+		iosu::usb_btrm::GetModule()
 	};
 
 	// initialize all subsystems which are persistent and don't depend on a game running
